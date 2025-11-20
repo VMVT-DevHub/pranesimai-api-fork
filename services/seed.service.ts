@@ -599,7 +599,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
             spField: 'veik_pav',
           }),
-          q.text(
+          q.input(
             23,
             24,
             'Nurodykite papildomą informaciją apie veiklą vykdančius fizinius ar juridinius asmenis',
@@ -951,7 +951,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               }),
             ],
           }),
-          q.text(14, 15, 'Nurodykite veiklą vykdančius fizinius ar juridinius asmenis', {
+          q.input(14, 15, 'Nurodykite veiklą vykdančius fizinius ar juridinius asmenis', {
             riskEvaluation: false,
             required: false,
             spField: 'veik_asm',
@@ -1332,7 +1332,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               }),
             ],
           }),
-          q.text(18, 19, 'Nurodykite veiklą vykdančius fizinius ar juridinius asmenis', {
+          q.input(18, 19, 'Nurodykite veiklą vykdančius fizinius ar juridinius asmenis', {
             riskEvaluation: false,
             required: true,
             spField: 'veik_asm',
