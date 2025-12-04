@@ -289,7 +289,7 @@ flowchart TB;
  ${!question.required ? `optional-${question.id}>Neprivalomas];` : ''}
  ${features.spField && question.spField ? `spField-${question.id}[/${question.spField}\\];` : ''}
  ${
-   features.conditions && question.condition?.question
+   features.conditions && question.condition.length > 0
      ? `condition-${question.id}{{Rodomas jei}};`
      : ''
  }
@@ -326,8 +326,10 @@ end`;
           .map(
             (question) =>
               `${
-                features.conditions && question.condition?.value
-                  ? `condition-${question.id} -.-> option-${question.condition.value}`
+                features.conditions && question.condition.length > 0
+                  ? `condition-${question.id} -.-> option-${question.condition.map(
+                      (condition) => ` ${condition.value}`,
+                    )}`
                   : ''
               }
               ${

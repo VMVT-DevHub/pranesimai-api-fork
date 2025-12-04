@@ -22,6 +22,8 @@ export enum QuestionType {
   // value = option.id
   SELECT = 'SELECT',
   RADIO = 'RADIO',
+  INFOCARD = 'INFOCARD',
+  ADDRESS = 'ADDRESS',
 
   // value = [11,23] (array of option.id)
   MULTISELECT = 'MULTISELECT',
@@ -32,6 +34,7 @@ export enum QuestionType {
   // text value
   EMAIL = 'EMAIL',
   INPUT = 'INPUT',
+  NUMBER = 'NUMBER',
   TEXT = 'TEXT',
   DATE = 'DATE',
   DATETIME = 'DATETIME',
@@ -61,7 +64,7 @@ interface Fields extends CommonFields {
   condition?: {
     question: Question['id'];
     value: any;
-  };
+  }[];
   dynamicFields: DynamicFields<
     Omit<Question, 'options'> & { options: Array<QuestionOption['id']> }
   >;
@@ -150,10 +153,13 @@ export type Question<
       },
 
       condition: {
-        type: 'object',
-        properties: {
-          question: 'number',
-          value: 'any',
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            question: 'number',
+            value: 'any',
+          },
         },
       },
 
