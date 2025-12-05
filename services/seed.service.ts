@@ -2298,7 +2298,6 @@ export default class SeedService extends moleculer.Service {
 
   @Method
   async shouldRecreateSeedData(currentHash: string): Promise<boolean> {
-    if (['production', 'test'].includes(process.env.NODE_ENV)) return false; // TODO: remove when templates are synced
     return await this.haveSeedTemplatesChanged(currentHash);
   }
 
