@@ -9,7 +9,7 @@ import { AuthRelation, Question, QuestionType } from './questions.service';
 import { QuestionOption } from './questionOptions.service';
 import DbConnection from '../mixins/database.mixin';
 
-const IS_SEED_REFRESH_ENABLED = process.env.IS_SEED_REFRESH_ENABLED ?? false;
+const IS_SEED_REFRESH_ENABLED = process.env.IS_SEED_REFRESH_ENABLED === 'true';
 const TEMPLATE_VERSION = 'v1';
 
 type SurveyTemplate = {
@@ -1752,7 +1752,6 @@ export default class SeedService extends moleculer.Service {
 
   @Method
   async shouldRecreateSeedData(currentHash: string): Promise<boolean> {
-    if (['production', 'test'].includes(process.env.NODE_ENV)) return false; // TODO: remove when templates are synced
     return await this.haveSeedTemplatesChanged(currentHash);
   }
 
