@@ -164,7 +164,7 @@ const pages = {
       q.input(id, id + 1, 'El. pašto adresas', {
         riskEvaluation: false,
         authRelation: AuthRelation.EMAIL,
-        spField: 'PranElPastas',
+        spField: 'pran_elpastas',
         ...q1,
       }),
       ...additionalQuestinos,
@@ -250,36 +250,59 @@ const pages = {
     questions: [
       q.radio(id, undefined, 'Ar galite pateikti įrodymų apie pranešamus pažeidimus?', {
         options: [os('Taip', id + 1), os('Ne', 56)],
-        spField: 'Irodymai',
+        spField: 'irodym',
         ...q1,
       }),
-      q.files(id + 1, id + 2, 'Pateikite nuotraukas atspindinčias pranešamus pažeidimus', {
-        riskEvaluation: false,
-        condition: [
-          {
-            question: id,
-            valueIndex: 0,
-          },
-        ],
-        spField: 'Attachments',
-        ...q2,
-      }),
-      q.files(id + 2, id + 3, 'Patreikite nuotraukas su produkto ženklinimo informacija', {
-        riskEvaluation: false,
-        condition: [
-          {
-            question: id,
-            valueIndex: 0,
-          },
-        ],
-        spField: 'Attachments',
-        ...q2,
-      }),
+      q.files(
+        id + 1,
+        id + 2,
+        'Jei galite pridėkite nuotraukas ar kitus dokumentus kuriuose atsispindėtų pranešami produkto ar patiekalo pažeidimai',
+        {
+          riskEvaluation: false,
+          required: false,
+          condition: [
+            {
+              question: id,
+              valueIndex: 0,
+            },
+          ],
+          dynamicFields: [
+            ...dm(4, [1], {
+              condition: false,
+            }),
+          ],
+          spField: 'files',
+          ...q2,
+        },
+      ),
+      q.files(
+        id + 2,
+        id + 3,
+        'Jei galite pridėkite nuotraukas ar kitus dokumentus kuriuose matytusi produkto ar patiekalo ženklinimo informacija',
+        {
+          riskEvaluation: false,
+          required: false,
+          condition: [
+            {
+              question: id,
+              valueIndex: 0,
+            },
+          ],
+          dynamicFields: [
+            ...dm(4, [2, 4], {
+              condition: false,
+            }),
+          ],
+          spField: 'files_zenkl',
+          ...q2,
+        },
+      ),
       q.files(
         id + 3,
         id + 4,
-        'Pateikite produkto ar patiekalo įsigijimą patvirtinančius dokumentus',
+        'Jei galite pridėkite dokumentus įrodančius produkto įsigijimo faktą',
         {
+          required: false,
           riskEvaluation: false,
           condition: [
             {
@@ -287,21 +310,32 @@ const pages = {
               valueIndex: 0,
             },
           ],
-          spField: 'Attachments',
+          dynamicFields: [
+            ...dm(4, [2, 4], {
+              condition: false,
+            }),
+          ],
+          spField: 'files_fakt',
           ...q2,
         },
       ),
-      q.files(id + 4, id + 5, 'Pateikite kitus pranešamus pažeidimus patvirtinančius failus', {
-        riskEvaluation: false,
-        condition: [
-          {
-            question: id,
-            valueIndex: 0,
-          },
-        ],
-        spField: 'Attachments',
-        ...q2,
-      }),
+      q.files(
+        id + 4,
+        id + 5,
+        'Jei galite pridėkite kitus su pranešamu įvykiu susijusius įrodymus',
+        {
+          riskEvaluation: false,
+          required: false,
+          condition: [
+            {
+              question: id,
+              valueIndex: 0,
+            },
+          ],
+          spField: 'files_kiti',
+          ...q2,
+        },
+      ),
     ],
   }),
 
@@ -343,28 +377,21 @@ const SURVEYS_SEED: SurveyTemplate[] = [
       {
         ...pages.tema(),
         questions: [
-          q.infocard(4, '4.2', 'Pasirinkite dėl ko pranešate', {
+          q.infocard(4, undefined, 'Pasirinkite dėl ko pranešate', {
+            required: true,
             riskEvaluation: false,
             options: [
-              os('Pranešimai apie maisto produktus ar patiekalus', 6, 'MSP1'), // 0
-              os('Pranešimai apie sveikatos sutrikdymus', 6, 'MSP2'), // 1
+              os('Pranešimai apie maisto produktus ar patiekalus', 69, 'MSP1'), // 0
+              os('Pranešimai apie sveikatos sutrikdymus', 58, 'MSP2'), // 1
               os(
                 'Pranešimai apie maisto tvarkymo veiklos pažeidimus ir/ar nelegaliai vykdomą veiklą',
-                6,
+                69,
                 'MSP3',
               ), // 2
-              os('Pranešimai apie su maistu besiliečiančias medžiagas', 6, 'MSP4'), // 3
-              os('Pranešimai apie viešai tiekiamo geriamojo vandens pažeidimus', 6, 'MSP5'), // 4
+              os('Pranešimai apie su maistu besiliečiančias medžiagas', 69, 'MSP4'), // 3
+              os('Pranešimai apie viešai tiekiamo geriamojo vandens pažeidimus', 69, 'MSP5'), // 4
             ],
-            spField: 'PranesimoTema',
-          }),
-          // temporary, none of these options are needed, just reusing the q.select template
-          q.address('4.2', undefined, 'Gyvenvietė', {
-            spField: 'Address',
-            options: o([
-              'Prekiaujama pasibaigusio galiojimo produktais',
-              'Maistas yra sugedęs (kvapas, skonis, išvaizda)',
-            ]),
+            spField: 'pran_tema',
           }),
         ],
       },
@@ -383,38 +410,298 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           },
         ],
         questions: [
-          // --- MSP1
-          q.date(6, 7, 'Nurodykite pranešamo įvykio datą', {
-            spField: 'IvykioData',
-            required: true,
-          }),
           // --- MSP2
-
-          // ---
-          q.multiselect(7, 8, 'Pasirinkite pranešamus pažeidimus.', {
+          q.datetime(58, 59, 'Nurodykite produkto ar patiekalo vartojimo datą ir laiką', {
+            spField: 'vartoj_data',
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 2, 3, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.datetime(
+            59,
+            60,
+            'Nurodykite datą ir laiką kada pasireiškė pirmieji sveikatos sutrikdymo simptomai',
+            {
+              spField: 'ivyk_data',
+              required: true,
+              dynamicFields: [
+                ...dm(4, [0, 2, 3, 4], {
+                  condition: false,
+                }),
+              ],
+            },
+          ),
+          q.multiselect(60, 61, 'Nurodykite kokie simptomai pasireiškė', {
             required: true,
             options: o([
-              'Prekiaujama pasibaigusio galiojimo produktais',
-              'Maistas yra sugedęs (kvapas, skonis, išvaizda)',
-              'Maiste rastas svetimkūnis (pvz., plaukai, vabzdžiai, stiklas)',
-              'Produktas nebuvo tinkamai termiškai apdorotas (žalias vidus ir pan.)',
-              'Produktas užterštas cheminėmis medžiagomis (skonis, kvapas, įtarimas dėl nuodingumo)',
-              'Produkte naudojami neleistini priedai arba klastojama sudėtis',
-              'Nepateikta informacija apie alergenus arba jie nenurodyti aiškiai',
-              'Etiketėje ar pakuotėje trūksta privalomos informacijos',
-              'Informacija apie produktą yra klaidinanti (neteisingi teiginiai ar kilmės duomenys)',
-              'Kaina nebuvo nurodyta arba nurodyta neaiškiai (etiketėje, lentynoje ar meniu)',
-              'Produktas reklamuojamas klaidinančiai (pvz., žadama nauda sveikatai)',
-              'Maisto papildas nėra notifikuotas',
-              'Pateikta informacija tikėtina neatitinka tikro produkto tipo ar klasės (pvz., sūris ne sūris)',
-              'Kiti pažeidimas',
+              'Pykinimas',
+              'Vėmimas',
+              'Viduriavimas',
+              'Pilvo skausmas arba spazmai',
+              'Karščiavimas',
+              'Galvos skausmas arba svaigimas',
+              'Odos bėrimas ar niežulys ar tinimas',
+              'Pasunkėjęs kvėpavimas arba dusulys',
+              'Burnos arba dantų arba dantenų sužalojimas',
+              'Kiti simptomai (įrašykite)',
             ]),
-            spField: 'PazTipas3',
+            spField: 'simptom',
+            dynamicFields: [
+              ...dm(4, [0, 2, 3, 4], {
+                condition: false,
+              }),
+            ],
           }),
-          q.text(8, 9, 'Nurodykite visus su įvykiu susijusius faktus ir aplinkybes', {
+          q.text(61, 62, 'Nurodykite papildomus simptomus kuriee jums pasireiškė', {
+            spField: 'simptom_extra',
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 2, 3, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.radio(
+            62,
+            63,
+            'Nurodykite ar dėl atsiradusių sveikatos sutrikdymų kreipėtės į gydymo įstaigą',
+            {
+              required: true,
+              spField: 'ar_kreiptasi',
+              riskEvaluation: false,
+              options: o(['Taip', 'Ne']),
+              dynamicFields: [
+                ...dm(4, [0, 2, 3, 4], {
+                  condition: false,
+                }),
+              ],
+            },
+          ),
+          q.select(
+            63,
+            64,
+            'Nurodykite koks kiekis asmenų vartojusių tą patį produktą ar patiekalą pajuto tuos pačius simptomus',
+            {
+              required: true,
+              spField: 'asm_kiekis',
+              options: o(['1', '2 - 4', '4 ir  daugiau']),
+              dynamicFields: [
+                ...dm(4, [0, 2, 3, 4], {
+                  condition: false,
+                }),
+              ],
+            },
+          ),
+          q.text(64, 9, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
+            spField: 'aplink',
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 2, 3, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+
+          // --- MSP1, MSP3, MSP4, MSP5
+
+          q.date(69, 66, 'Nurodykite pranešamo įvykio datą', {
+            spField: 'ivyk_data',
+            required: true,
+            dynamicFields: [
+              ...dm(4, [1], {
+                condition: false,
+              }),
+            ],
+          }),
+
+          q.select(66, 70, 'Nurodykite apie kokio tipo veiklos pažeidimus pranešate', {
+            //MSP3
+            required: true,
+            spField: 'pazeid',
+            options: o([
+              'Gyvūninio maisto tvarkymo veikla',
+              'Ikimokyklinio, mokyklinio ugdymo įstaigų maitinimo veikla (tyrimui visada)',
+              'Maisto papildų gamybos veikla',
+              'Socialinės globos ir rūpybos įstaigų maitinimo veikla (tiriama visada)',
+              'Sveikatos priežiūros įstaigų maitinimo veikla(tiriama visada)',
+              'Vaikų stovyklų maitinimo veikla(tiriama visada)',
+              'Alkoholinių gėrimų gamybos veikla',
+              'Žaliavinio pieno supirkimo punkto, surinkimo centro veikla',
+              'Laisvės atėmimo vietų maitinimo veikla',
+              'Maisto gamybos namų ūkio virtuvėse veikla',
+              'Maisto paslaugų tiekimo veikla (renginiams, kaimo turizmo sodybos ir kt.)',
+              'Maisto pristatymo į namus veikla',
+              'Maisto produktų gamybos veikla',
+              'Gėrimų pardavimo vartoti vietose (barų) veikla',
+              'Viešojo maitinimo veikla',
+              'Maisto produktų prekybos ir/ar sandėliavimo veikla',
+              'Daržovių, vaisių, uogų ir kitų maistui vartojamų augalų auginimo veikla',
+              'Internetinės maisto produktų prekybos veikla',
+              'Maisto produktų prekybos iš automatų veikla',
+              'Kita veikla',
+            ]),
+            dynamicFields: [
+              ...dm(4, [0, 1, 3, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+
+          q.multiselect(70, undefined, 'Pasirinkite pranešamus pažeidimus', {
+            options: [
+              os('Produktas skleidžia nemalonų kvapą ar skonį', 73), // 0
+              os('Produktas palieka dėmes, spalvą ar skonį maiste', 73), // 1
+              os('Produktas atrodo nesaugus (pvz., plastikas lydosi, danga atsisluoksniuoja)', 73), // 2
+              os('Produktas yra sulūžęs, įskilęs ar kitaip pažeistas', 73), // 3
+              os('Nėra aiškios informacijos, kad produktas tinkamas naudoti su maistu', 73), // 4
+              os(
+                'Nenurodyta, kaip saugiai naudoti produktą (pvz., ar galima dėti į orkaitę, mikrobangų krosnelę, plauti indaplovėje)',
+                73,
+              ), // 5
+              os('Produktas atrodo nešvarus, su gamybos ar kitomis priemaišomis', 73), // 6
+              os('Informacija apie produktą klaidinanti arba nepilna', 73), // 7
+              os('Kiti pažeidimai', 73), // 8
+
+              os('Vanduo turi nemalonų kvapą', 85), // 9
+              os('Vanduo turi neįprastą skonį', 85), // 10
+              os('Vanduo užterštas (pvz., priemaišos, rūdys, nuosėdos)', 85), // 11
+              os('Vanduo gali būti užterštas mikroorganizmais', 85), // 12
+              os('Vanduo neatitinka nustatytų cheminių reikalavimų)', 85), // 13
+              os(
+                'Netinkama ar nesavalaikė vandens tiekimo įmonės reakcija į nustatytas problemas',
+                85,
+              ), // 14
+
+              os('Prekiaujama pasibaigusio galiojimo produktais', 72), // 15
+              os('Maistas yra sugedęs (kvapas, skonis, išvaizda)', 72), // 16
+              os('Maiste rastas svetimkūnis (pvz., plaukai, vabzdžiai, stiklas)', 72), // 17
+              os('Produktas nebuvo tinkamai termiškai apdorotas (žalias vidus ir pan.)', 72), // 18
+              os(
+                'Produktas užterštas cheminėmis medžiagomis (skonis, kvapas, įtarimas dėl nuodingumo)',
+                72,
+              ), // 19
+              os('Produkte naudojami neleistini priedai arba klastojama sudėtis', 72), // 20
+              os('Nepateikta informacija apie alergenus arba jie nenurodyti aiškiai', 72), // 21
+              os('Etiketėje ar pakuotėje trūksta privalomos informacijos', 72), // 22
+              os(
+                'Informacija apie produktą yra klaidinanti (neteisingi teiginiai ar kilmės duomenys)',
+                72,
+              ), // 23
+              os(
+                'Kaina nebuvo nurodyta arba nurodyta neaiškiai (etiketėje, lentynoje ar meniu)',
+                72,
+              ), // 24
+              os('Produktas reklamuojamas klaidinančiai (pvz., žadama nauda sveikatai)', 72), // 25
+              os('Maisto papildas nėra notifikuotas', 72), // 26
+              os(
+                'Pateikta informacija tikėtina neatitinka tikro produkto tipo ar klasės (pvz., sūris ne sūris)',
+                72,
+              ), // 27
+              os('Kiti pažeidimai', 72), // 28
+
+              os('Nenurodoma prekiaujamų maisto produktų ar patiekalų alergenų informacija', 71), // 29
+              os(
+                'Prekiaujama neleistinais maisto produktais ar produktais su neleistinomis sudėtinėmis dalimis',
+                71,
+              ), // 30
+              os(
+                'Produktai užteršti cheminiais, fiziniais, mikrobiniais ar kitokiais teršalais',
+                71,
+              ), // 31
+              os('Veikla vykdoma be leidimų/registracijos', 71), // 32
+              os('Veiklos patalpos nehigieniškos, netvarkingos', 71), // 33
+              os('Veikloje naudojami produktai su pasibaigusiais tinkamumo vartoti terminais', 71), // 34
+              os('Personalas nesilaiko higienos normų', 71), // 35
+              os('Veikloje maisto produktai laikomi netinkamomis sąlygomis', 71), // 36
+              os('Vykdoma maisto klastojimo veikla', 71), // 37
+              os(
+                'Veikla vykdoma nesilaikant savikontrolės sistemos, netinkamai tvarkomi privalomi veiklos dokumentai',
+                71,
+              ), // 38
+              os('Vykdomoje veikloje produktai netinkamai ženklinami', 71), // 39
+              os('Vykdomoje veikloje netinkamai tvarkomos maisto atliekos', 71), // 40
+              os('Vykdomoje viešojo maitinimo veikloje meniu neatitinka reikalavimų', 71), // 41
+              os('Patiekalai patiekiami netinkamos temperatūros', 71), // 42
+              os('Veiklos reklama pažeidžia teisės aktus', 71), // 43
+              os('Nepateikiama privalomoji informacoja apie vykdomą veiklą', 71), // 44
+              os('Vykdomoje veikloje daromi kiti pažeidimai', 71), // 45
+              os('Kiti pažeidimai', 85), // 46
+            ],
+            spField: 'paz_tip3',
+            dynamicFields: [
+              ...dm(4, [0], {
+                //1
+                options: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28],
+              }),
+              ...dm(4, [1], {
+                //2
+                condition: false,
+              }),
+              ...dm(4, [2], {
+                //3
+                options: [29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
+              }),
+              ...dm(4, [3], {
+                //4
+                options: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+              }),
+              ...dm(4, [4], {
+                //5
+                options: [9, 10, 11, 12, 13, 14, 46],
+              }),
+            ],
+            required: true,
+          }),
+
+          q.text(71, 41, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
             riskEvaluation: false,
             required: true,
-            spField: 'Faktai',
+            spField: 'aplink',
+            dynamicFields: [
+              //MSP3 DISPLAY
+              ...dm(4, [0, 1, 3, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+
+          q.text(85, 78, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
+            riskEvaluation: false,
+            required: true,
+            spField: 'aplink',
+            dynamicFields: [
+              //MSP5 DISPLAY
+              ...dm(4, [0, 1, 2, 3], {
+                condition: false,
+              }),
+            ],
+          }),
+
+          q.text(72, 9, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
+            riskEvaluation: false,
+            required: true,
+            spField: 'aplink',
+            dynamicFields: [
+              //MSP1 DISPLAY
+              ...dm(4, [1, 2, 3, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+
+          q.text(73, 74, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
+            riskEvaluation: false,
+            required: true,
+            spField: 'aplink',
+            dynamicFields: [
+              //MSP4 DISPLAY
+              ...dm(4, [0, 1, 2, 4], {
+                condition: false,
+              }),
+            ],
           }),
         ],
       },
@@ -423,39 +710,12 @@ const SURVEYS_SEED: SurveyTemplate[] = [
       {
         ...pages.detales(),
         questions: [
-          //  q.multiselect(6, undefined, 'Pasirinkite gyvūno tipą', {
-          //   spField: 'GyvunoTipas',
-          //   riskEvaluation: false,
-          //   options: [
-          //     os('Ūkiniai gyvūnai', 8),
-          //     os('Gyvūnai augintiniai', 7),
-          //     os('Laukiniai gyvūnai', 9),
-          //   ],
-          // }),
-
-          // q.multiselect(7, undefined, 'Pasirinkite gyvūno augintinio rūšį', {
-          //   spField: 'Augintinis',
-          //   riskEvaluation: false,
-          //   options: [
-          //     os('Šunys', 12),
-          //     os('Katės', 12),
-          //     os('Šeškai', 12),
-          //     os('Graužikai', 12),
-          //     os('Ropliai', 12),
-          //     os('Paukščiai', 12),
-          //     os('Kita', '7.1'),
-          //   ],
-          //   condition: c(6),
-          // }),
-
-          // q.input('7.1', 12, 'Įveskite gyvūno augintinio rūšį', {
-          //   riskEvaluation: false,
-          //   condition: c(7),
-          //   spField: 'AugintinisKita',
-          // }),
+          //MSP1 MSP2
           q.radio(9, undefined, 'Pasirinkite apie ką pranešate.', {
             riskEvaluation: false,
             options: [os('Produktą', 10), os('Patiekalą', 29)],
+            spField: 'pran_apie',
+            required: true,
           }),
           q.select(10, undefined, 'Pasirinkite apie kokios grupės produktus pranešate', {
             options: [
@@ -478,25 +738,29 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               os('Specialios paskirties produktai', 27),
               os('Maisto priedai ir papildai', 28),
             ],
+            required: true,
             condition: [
               {
                 question: 9,
-                valueIndex: 0, // Shows only when "Produktą" selected
+                valueIndex: 0,
               },
             ],
-            spField: 'ProduktoGrupe',
+            spField: 'produkt_grup',
           }),
           q.input(29, 41, 'Nurodykite pilną ir tikslų patiekalo pavadinimą', {
+            required: true,
             riskEvaluation: false,
+            spField: 'patiek_pav',
             condition: [
               {
                 question: 9,
-                valueIndex: 1, // Shows only when "Patiekalą" selected
+                valueIndex: 1,
               },
             ],
           }),
           q.select(11, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Šviežia mėsa (jautiena, kiauliena, paukštiena, aviena ir kt.)', //0
@@ -518,7 +782,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(12, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Svirplių produktai (miltai, baltymų užkandžiai ir kt.)',
@@ -535,7 +800,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(13, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Šviežia arba atšaldyta žuvis',
@@ -558,7 +824,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(14, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Pienas ir jo gėrimai (karvės, ožkos, avių pienas)',
@@ -580,7 +847,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(15, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Švieži kiaušiniai',
@@ -597,7 +865,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(16, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Javai ir grūdai (ryžiai, kviečiai, avižos, grikiai, miežiai, kukurūzai)',
@@ -618,7 +887,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(17, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Pupelės, lęšiai, žirniai, avinžirniai, soja ir jų produktai (džiovinti, konservuoti)',
@@ -635,7 +905,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(18, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Kanapių sėklos',
@@ -657,7 +928,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(19, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Šviežios daržovės',
@@ -677,7 +949,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(20, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Švieži vaisiai',
@@ -697,7 +970,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(21, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Augaliniai aliejai (alyvuogių, saulėgrąžų, rapsų, kokosų)',
@@ -714,7 +988,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(22, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Cukrus ir jo gaminiai (cukranendrių cukrus, rudasis cukrus, dirbtiniai saldikliai)',
@@ -732,7 +1007,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(23, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Medus',
@@ -750,7 +1026,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(24, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Kava ir jos gaminiai',
@@ -769,7 +1046,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(25, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Traškučiai, spragėsiai, kukurūzų lazdelės',
@@ -787,7 +1065,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(26, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Druska (joduota, jūros druska, Himalajų druska)',
@@ -805,7 +1084,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(27, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Kūdikų ir vaikų maistas (pieno mišiniai, tyrelių gaminiai)',
@@ -823,7 +1103,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.select(28, 30, 'Pasirinkite produktą apie kurį pranešate', {
-            spField: 'pogrupis',
+            required: true,
+            spField: 'produkt_pogrup',
             riskEvaluation: false,
             options: o([
               'Maisto papildai (vitaminai, mineralai, omega-3, probiotikai)',
@@ -846,7 +1127,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.input(30, 31, 'Nurodykite tikslų, pilną produkto pavadinimą.', {
             riskEvaluation: false,
             hint: 'pvz: Vanilinis varškės sūrelis "Karums"',
-            spField: 'pavadinimas',
+            spField: 'produkt_pav',
             required: true,
             condition: [
               {
@@ -857,7 +1138,9 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           }),
 
           q.select(31, 32, 'Nurodykite kokia buvo pranešamo produkto pakuotė', {
+            required: true,
             riskEvaluation: false,
+            spField: 'produkt_pak',
             options: [
               os('Buteliukas'),
               os('Kartoninė dėžutė'),
@@ -878,7 +1161,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
 
           q.number(32, 33, 'Nurodykite apie kokį produkto kiekį pranešate', {
             riskEvaluation: false,
-            spField: 'amount',
+            spField: 'kiekis',
             required: true,
             condition: [
               {
@@ -889,8 +1172,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           }),
 
           q.select(33, 34, 'Pasirinkite nurodyto produkto kiekio matavimo vienetus', {
-            // needs to be pretty n small
             riskEvaluation: false,
+            spField: 'matas',
             required: true,
             options: [os('Vienetai'), os('Gramai'), os('Kilogramai'), os('Litrai')],
             condition: [
@@ -903,7 +1186,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
 
           q.input(34, 35, 'Jei galite nurodykite produkto gamintoją', {
             riskEvaluation: false,
-            spField: 'pavadinimas',
+            spField: 'produkt_gam',
             required: false,
             condition: [
               {
@@ -913,9 +1196,9 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
 
-          q.input(35, 36, 'Jei galite nurodykite produkto Platintoją', {
+          q.input(35, 36, 'Jei galite nurodykite produkto platintoją', {
             riskEvaluation: false,
-            spField: 'pavadinimas',
+            spField: 'produkt_plat',
             required: false,
             condition: [
               {
@@ -927,7 +1210,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
 
           q.input(36, 37, 'Jei galite nurodykite produkto partijos numerį', {
             riskEvaluation: false,
-            spField: 'code',
+            spField: 'part_num',
             required: false,
             condition: [
               {
@@ -936,10 +1219,9 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               },
             ],
           }),
-
           q.date(37, 41, 'Jei galite nurodykite produkto tinkamumo vartoti terminą', {
             riskEvaluation: false,
-            spField: 'data',
+            spField: 'vart_term',
             required: false,
             condition: [
               {
@@ -949,85 +1231,313 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
 
-          //40 is taken
+          // MSP4
+          q.input(74, 75, 'Nurodykite tikslų, pilną produkto pavadinimą.', {
+            riskEvaluation: false,
+            hint: 'pvz: Vanilinis varškės sūrelis "Karums"',
+            spField: 'produkt_pav',
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 1, 2, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.input(75, 76, 'Jei galite nurodykite produkto gamintoją', {
+            riskEvaluation: false,
+            spField: 'produkt_gam',
+            required: false,
+            dynamicFields: [
+              ...dm(4, [0, 1, 2, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+
+          q.input(76, 77, 'Jei galite nurodykite produkto platintoją', {
+            riskEvaluation: false,
+            spField: 'produkt_plat',
+            required: false,
+            dynamicFields: [
+              ...dm(4, [0, 1, 2, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+
+          q.input(77, 41, 'Jei galite nurodykite produkto partijos numerį', {
+            riskEvaluation: false,
+            spField: 'part_num',
+            required: false,
+            dynamicFields: [
+              ...dm(4, [0, 1, 2, 4], {
+                condition: false,
+              }),
+            ],
+          }),
         ],
       },
-
       {
         ...pages.vieta(),
         questions: [
+          // MSP1 MSP2 MSP3 MSP4
           q.radio(41, undefined, 'Kur įsigytas produktas ar patiekalas?', {
             riskEvaluation: false,
             required: true,
-            options: [os('Fizinėje prekybos vietoje', 42), os('Internetu', 47)],
+            spField: 'gavimo_vieta',
+            options: [
+              os('Fizinėje prekybos vietoje', 42),
+              os('Internetu', 47),
+              os('Organizuotame renginyje', 84),
+            ],
+            dynamicFields: [
+              ...dm(4, [4], {
+                //MSP5
+                condition: false,
+              }),
+              ...dm(4, [0], {
+                //MSP1
+                options: [0, 1],
+              }),
+              ...dm(4, [1], {
+                //MSP2
+                options: [0, 1, 2],
+              }),
+              ...dm(4, [2], {
+                //MSP3
+                options: [0, 1],
+              }),
+              ...dm(4, [3], {
+                //MSP4
+                options: [0, 1],
+              }),
+            ],
           }),
           q.input(42, 43, 'Info iš registrų centro savivaldybė', {
             riskEvaluation: false,
             required: true,
+            spField: 'jar_sav',
             condition: [
               {
                 question: 41,
                 valueIndex: 0,
               },
+            ],
+            dynamicFields: [
+              ...dm(4, [4], {
+                condition: false,
+              }),
             ],
           }),
           q.input(43, 44, 'Info iš registrų centro gyvenvietė', {
             riskEvaluation: false,
             required: true,
+            spField: 'jar_gyv',
             condition: [
               {
                 question: 41,
                 valueIndex: 0,
               },
+            ],
+            dynamicFields: [
+              ...dm(4, [4], {
+                condition: false,
+              }),
             ],
           }),
           q.input(44, 45, 'Info iš registrų centro gatvė', {
             riskEvaluation: false,
             required: true,
+            spField: 'jar_gatv',
             condition: [
               {
                 question: 41,
                 valueIndex: 0,
               },
             ],
+            dynamicFields: [
+              ...dm(4, [4], {
+                condition: false,
+              }),
+            ],
           }),
           q.input(45, 48, 'Info iš registrų centro pastato numeris', {
             riskEvaluation: false,
             required: true,
+            spField: 'jar_num',
             condition: [
               {
                 question: 41,
                 valueIndex: 0,
               },
+            ],
+            dynamicFields: [
+              ...dm(4, [4], {
+                condition: false,
+              }),
             ],
           }),
           // ----
           q.input(47, 48, 'Pateikite prekybos internetinio puslapio nuorodą', {
             riskEvaluation: false,
             required: true,
+            spField: 'psl_adresas',
             condition: [
               {
                 question: 41,
                 valueIndex: 1,
               },
             ],
+            dynamicFields: [
+              ...dm(4, [4], {
+                condition: false,
+              }),
+            ],
           }),
           // -----
-          q.text(48, 49, 'Nurodykite produkto ar patiekalo prekybos vietos pavadinimą', {
+          q.input(84, 51, 'Nurodykite organizuoto renginio pavadinimą', {
+            riskEvaluation: false,
+            spField: 'org_pav',
+            required: true,
+            condition: [
+              {
+                question: 41,
+                valueIndex: 2,
+              },
+            ],
+            dynamicFields: [
+              ...dm(4, [0, 2, 3, 4], {
+                condition: false,
+              }),
+            ],
+          }),
+          // -----
+          q.input(48, 49, 'Nurodykite produkto ar patiekalo prekybos vietos pavadinimą', {
+            spField: 'prekyb_pav',
             required: true,
             riskEvaluation: false,
+            dynamicFields: [
+              ...dm(4, [4], {
+                condition: false,
+              }),
+            ],
           }),
           q.text(
             49,
             50,
-            'Jei galite, nurodykyte fizinius ar juridinius asmenis vykdančius prekybos veiklą',
-            {},
+            'Nurodykite visą žinomą papildomą informaciją apie prekybos vietą, nuo darbo valandų iki patekimo į patalpas informacijos',
+            {
+              spField: 'patek',
+              required: false,
+              condition: [
+                {
+                  question: 41,
+                  valueIndex: 0,
+                },
+              ],
+              dynamicFields: [
+                ...dm(4, [4], {
+                  condition: false,
+                }),
+                {
+                  condition: {
+                    question: 4,
+                    valueIndex: 1,
+                  },
+                  values: {
+                    title:
+                      'Nurodykite visą žinomą papildomą informaciją apie prekybos vietą ar organizuotą renginį, nuo darbo valandų iki patekimo į patalpas informacijos',
+                  },
+                },
+              ],
+            },
           ),
           q.text(
             50,
             51,
-            'Nurodykite visą žinomą papildomą informaciją apie prekybos vietą, nuo darbo valandų iki patekimo į patalpas informacijos',
-            {},
+            'Jei galite, nurodykyte fizinius ar juridinius asmenis vykdančius prekybos veiklą',
+            {
+              spField: 'pap_adr_info',
+              required: false,
+              dynamicFields: [
+                ...dm(4, [4], {
+                  condition: false,
+                }),
+              ],
+            },
+          ),
+
+          //MSP5
+
+          q.input(78, 79, 'Info iš registrų centro savivaldybė', {
+            spField: 'jar_sav',
+            riskEvaluation: false,
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 1, 2, 3], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.input(79, 80, 'Info iš registrų centro gyvenvietė', {
+            spField: 'jar_gyv',
+            riskEvaluation: false,
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 1, 2, 3], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.input(80, 81, 'Info iš registrų centro gatvė', {
+            spField: 'jar_gatv',
+            riskEvaluation: false,
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 1, 2, 3], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.input(81, 82, 'Info iš registrų centro pastato numeris', {
+            spField: 'jar_num',
+            riskEvaluation: false,
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 1, 2, 3], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.input(
+            82,
+            83,
+            'Nurodykite kokiu laiku VMVT inspektoriai galėtų atvykti paimti vandens mėginio',
+            {
+              spField: 'meg_laik',
+              riskEvaluation: false,
+              required: false,
+              dynamicFields: [
+                ...dm(4, [0, 1, 2, 3], {
+                  condition: false,
+                }),
+              ],
+            },
+          ),
+          q.text(
+            83,
+            51,
+            'Nurodykite kokiais kontaktais VMVT inspektoriai gali su jumis susisiekti dėl vandens mėginio paėmimo',
+            {
+              spField: 'kontak',
+              riskEvaluation: false,
+              required: false,
+              dynamicFields: [
+                ...dm(4, [0, 1, 2, 3], {
+                  condition: false,
+                }),
+              ],
+            },
           ),
         ],
       },
@@ -1040,1067 +1550,11 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           'Pridėkite vaizdinę medžiagą (nuotraukas, video) arba kitus dokumentus įrodančius pateikiamus pažeidimus. Pvz: įsigijimo čekis, produkto nuotraukos, ženklinimo informacija ir pan.',
       },
 
-      // // =======================================
-      // pages.aplinkybes(51),
+      // =======================================
 
-      // // =======================================
-
-      // // =======================================
       pages.teises(56),
     ],
   },
-
-  // SURVEY 2
-  //   {
-  //     title: 'Pašarų ar veterinarijos vaistų pranešimas',
-  //     icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  // <path d="M23.6253 46.1248L46.1253 23.6248C47.1766 22.5944 48.0133 21.3659 48.5869 20.0102C49.1605 18.6545 49.4597 17.1985 49.4672 15.7265C49.4746 14.2544 49.1901 12.7955 48.6302 11.4341C48.0703 10.0726 47.2461 8.83572 46.2052 7.79481C45.1643 6.75391 43.9274 5.92967 42.5659 5.36978C41.2045 4.80988 39.7456 4.52542 38.2736 4.53286C36.8015 4.54029 35.3455 4.83947 33.9898 5.41309C32.6341 5.98671 31.4056 6.8234 30.3753 7.87476L7.87525 30.3748C6.82389 31.4051 5.9872 32.6336 5.41358 33.9893C4.83996 35.345 4.54078 36.801 4.53335 38.2731C4.52591 39.7451 4.81037 41.204 5.37026 42.5655C5.93016 43.9269 6.75439 45.1638 7.7953 46.2047C8.83621 47.2456 10.0731 48.0699 11.4346 48.6298C12.796 49.1897 14.2549 49.4741 15.727 49.4667C17.199 49.4592 18.655 49.1601 20.0107 48.5864C21.3664 48.0128 22.5949 47.1761 23.6253 46.1248Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M19.125 19.125L34.875 34.875" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // </svg>
-  //     `,
-  //     spList: 'PVVpranesimai',
-  //     authType: SurveyAuthType.OPTIONAL,
-  //     description:
-  //       'Pranešimai apie pašarus ir veterinarinius vaistus, jų kokybės, saugos, ženklinimo ir kitus pažeidimus, nelegalią šių produktų gamybą, tiekimą. Pranešimai apie pašarų ir veterinarinės farmacijos ūkio subjektų veiklos pažeidimus.',
-  //     pages: [
-  //       // =======================================
-  //       pages.kontaktiniai(3),
-
-  //       // =======================================
-  //       {
-  //         ...pages.tema(),
-  //         questions: [
-  //           q.select(4, undefined, 'Pasirinkite dėl ko pranešate', {
-  //             riskEvaluation: false,
-  //             spField: 'PranesimoTema',
-  //             options: [
-  //               os('Dėl įsigytų pašarų', 5), // 0
-  //               os('Dėl pastebėtų prekybos vietoje pašarų', 6), // 1
-  //               os('Dėl įsigytų veterinarinių vaistų', 5), // 2
-  //               os('Dėl pastebėtų prekybos vietoje veterinarinių vaistų', 6), // 3
-  //               os('Dėl pašarų gamybos veiklos', '5.0.pre'), // 4
-  //               os('Dėl pašarų prekybos veiklos', '5.0.pre'), // 5
-  //               os('Dėl veterinarinių vaistų gamybos veiklos', '5.0.pre'), // 6
-  //               os('Dėl veterinarinių vaistų prekybos veiklos', '5.0.pre'), // 7
-  //             ],
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       {
-  //         ...pages.detales(),
-  //         dynamicFields: [
-  //           {
-  //             condition: {
-  //               question: 4,
-  //               valueIndex: 0,
-  //             },
-  //             values: {
-  //               title: 'Informacija apie produktą',
-  //             },
-  //           },
-  //           {
-  //             condition: {
-  //               question: 4,
-  //               valueIndex: 1,
-  //             },
-  //             values: {
-  //               title: 'Informacija apie produktą',
-  //             },
-  //           },
-  //           {
-  //             condition: {
-  //               question: 4,
-  //               valueIndex: 2,
-  //             },
-  //             values: {
-  //               title: 'Informacija apie produktą',
-  //             },
-  //           },
-  //           {
-  //             condition: {
-  //               question: 4,
-  //               valueIndex: 3,
-  //             },
-  //             values: {
-  //               title: 'Informacija apie produktą',
-  //             },
-  //           },
-  //         ],
-  //         questions: [
-  //           q.date('5.0.pre', '5.0', 'Nurodykite pažeidimų pastebėjimo datą', {
-  //             spField: 'IvykioData',
-  //           }),
-  //           q.multiselect('5.0', '12.0', 'Nurodykite kokius veiklos pažeidimus pranešate', {
-  //             spField: 'PazTipas5',
-  //             riskEvaluation: false,
-  //             options: o([
-  //               'Kiti pažeidimai', // 0
-  //               'Kokybės pažeidimai', // 1
-  //               'Neleistinos sudedamosios dalys', // 2
-  //               'Neregistruotas veterinarinis vaistas', // 3
-  //               'Neregistruoti veterinariniai vaistai', // 4
-  //               'Netinkamai pildomi veiklos dokumentai', // 5
-  //               'Netinkamai tvarkomos atliekos', // 6
-  //               'Netinkamos laikymo sąlygos', // 7
-  //               'Netinkamos produktų laikymo sąlygos', // 8
-  //               'Patalpos nehigieniškos, neatitinka nustatytų reikalavimų', // 9
-  //               'Prekiaujama neleistinais produktais', // 10
-  //               'Produktas užterštas cheminiais, fiziniais, mikrobiniais ar kitokiais teršalais', // 11
-  //               'Reklamos pažeidimai', // 12
-  //               'Tinkamumo vartoti terminų pažeidimai', // 13
-  //               'Vykdoma veikla be leidimų/registracijos', // 14
-  //               'Ženklinimo pažeidimai', // 15
-  //             ]),
-  //             dynamicFields: [
-  //               ...dm(4, [0], {
-  //                 options: [1, 15, 13, 2, 10, 11, 7, 12, 0],
-  //               }),
-  //               ...dm(4, [1], {
-  //                 options: [1, 15, 13, 2, 10, 11, 7, 12, 0],
-  //               }),
-  //               ...dm(4, [2], {
-  //                 options: [15, 13, 2, 3, 10, 7, 12, 0],
-  //               }),
-  //               ...dm(4, [3], {
-  //                 options: [15, 13, 2, 3, 10, 7, 12, 0],
-  //               }),
-  //               ...dm(4, [4], {
-  //                 options: [14, 8, 9, 6, 5, 15, 13, 2, 0],
-  //               }),
-  //               ...dm(4, [5], {
-  //                 options: [14, 8, 9, 6, 5, 15, 13, 2, 12, 0],
-  //               }),
-  //               ...dm(4, [6], {
-  //                 options: [14, 8, 9, 6, 5, 15, 13, 2, 4, 0],
-  //               }),
-  //               ...dm(4, [7], {
-  //                 options: [14, 8, 9, 6, 5, 15, 13, 2, 4, 12, 0],
-  //               }),
-  //             ],
-  //           }),
-  //           q.date(5, 6, 'Nurodykite produktų įsigijimo datą', {
-  //             spField: 'IvykioData',
-  //             dynamicFields: [
-  //               {
-  //                 condition: {
-  //                   question: 4,
-  //                   valueIndex: 0,
-  //                 },
-  //                 values: {
-  //                   title: 'Nurodykite pašarų įsigijimo datą',
-  //                 },
-  //               },
-  //               {
-  //                 condition: {
-  //                   question: 4,
-  //                   valueIndex: 2,
-  //                 },
-  //                 values: {
-  //                   title: 'Nurodykite veterinarinių vaistų įsigijimo datą',
-  //                 },
-  //               },
-  //             ],
-  //           }),
-  //           q.date(6, 7, 'Nurodykite produktų pastebėjimo prekybos vietoje datą', {
-  //             spField: 'IvykioData',
-  //             dynamicFields: [
-  //               ...dm(4, [1], {
-  //                 title: 'Nurodykite pašarų pastebėjimo prekybos vietoje datą',
-  //               }),
-  //               ...dm(4, [3], {
-  //                 title: 'Nurodykite veterinarinių vaistų pastebėjimo prekybos vietoje datą',
-  //               }),
-  //               ...dm(4, [0, 2], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //           }),
-  //           q.multiselect(7, 8, 'Pasirinkite apie kokius pažeidimus pranešate', {
-  //             spField: 'PazTipas5',
-  //             options: o([
-  //               'Kiti pažeidimai', // 0
-  //               'Kokybės pažeidimai', // 1
-  //               'Neleistinos sudedamosios dalys', // 2
-  //               'Neregistruotas veterinarinis vaistas', // 3
-  //               'Neregistruoti veterinariniai vaistai', // 4
-  //               'Netinkamai pildomi veiklos dokumentai', // 5
-  //               'Netinkamai tvarkomos atliekos', // 6
-  //               'Netinkamos laikymo sąlygos', // 7
-  //               'Netinkamos produktų laikymo sąlygos', // 8
-  //               'Patalpos nehigieniškos, neatitinka nustatytų reikalavimų', // 9
-  //               'Prekiaujama neleistinais produktais', // 10
-  //               'Produktas užterštas cheminiais, fiziniais, mikrobiniais ar kitokiais teršalais', // 11
-  //               'Reklamos pažeidimai', // 12
-  //               'Tinkamumo vartoti terminų pažeidimai', // 13
-  //               'Vykdoma veikla be leidimų/registracijos', // 14
-  //               'Ženklinimo pažeidimai', // 15
-  //             ]),
-  //             dynamicFields: [
-  //               ...dm(4, [0], {
-  //                 options: [1, 15, 13, 2, 10, 11, 7, 12, 0],
-  //               }),
-  //               ...dm(4, [1], {
-  //                 options: [1, 15, 13, 2, 10, 11, 7, 12, 0],
-  //               }),
-  //               ...dm(4, [2], {
-  //                 options: [15, 13, 2, 3, 10, 7, 12, 0],
-  //               }),
-  //               ...dm(4, [3], {
-  //                 options: [15, 13, 2, 3, 10, 7, 12, 0],
-  //               }),
-  //               ...dm(4, [4], {
-  //                 options: [14, 8, 9, 6, 5, 15, 13, 2, 0],
-  //               }),
-  //               ...dm(4, [5], {
-  //                 options: [14, 8, 9, 6, 5, 15, 13, 2, 12, 0],
-  //               }),
-  //               ...dm(4, [6], {
-  //                 options: [14, 8, 9, 6, 5, 15, 13, 2, 4, 0],
-  //               }),
-  //               ...dm(4, [7], {
-  //                 options: [14, 8, 9, 6, 5, 15, 13, 2, 4, 12, 0],
-  //               }),
-  //             ],
-  //           }),
-  //           q.input(8, 9, 'Nurodykite produkto pavadinimą', {
-  //             spField: 'Pavadinimas',
-  //             riskEvaluation: false,
-  //             hint: 'Nurodykite tikslų produkto pavadinimą (pvz. varškės sūrelis "XXXX")',
-  //             dynamicFields: [
-  //               ...dm(4, [0, 1], {
-  //                 title: 'Nurodykite pašaro pavadinimą',
-  //                 hint: 'Nurodykite tikslų pašaro pavadinimą (pvz. sausas šunų maistas „XXX“)',
-  //               }),
-  //               ...dm(4, [2, 3], {
-  //                 title: 'Nurodykite veterinarinio vaisto pavadinimą',
-  //                 hint: 'Nurodykite tikslų veterinarinio vaisto pavadinimą (pvz. ampulės „XXX“)',
-  //               }),
-  //             ],
-  //           }),
-  //           q.radio(9, undefined, 'Ar galite nurodyti gamintoją?', {
-  //             riskEvaluation: false,
-  //             options: [os('Taip', '9.1'), os('Ne', 10)],
-  //           }),
-  //           q.input('9.1', 10, 'Produkto gamintojas', {
-  //             spField: 'Gamintojas',
-  //             riskEvaluation: false,
-  //             condition: c(9),
-  //           }),
-
-  //           q.radio(10, undefined, 'Ar galite nurodyti importuotoją?', {
-  //             riskEvaluation: false,
-  //             options: [os('Taip', '10.1'), os('Ne', 11)],
-  //             dynamicFields: [
-  //               ...dm(4, [0, 1, 2, 3], {
-  //                 title: 'Ar galite nurodyti tiekėją?',
-  //               }),
-  //               ...dm(4, [4, 5, 6, 7], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //           }),
-  //           q.input('10.1', 11, 'Produkto importuotojas', {
-  //             riskEvaluation: false,
-  //             condition: c(10),
-  //             spField: 'Tiekejas',
-  //             dynamicFields: [
-  //               ...dm(4, [0, 1, 2, 3], {
-  //                 title: 'Produkto tiekėjas',
-  //               }),
-  //               ...dm(4, [4, 5, 6, 7], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //           }),
-
-  //           q.date(11, '12.0', 'Nurodykite produktų tinkamumo vartoti terminą', {
-  //             riskEvaluation: false,
-  //             spField: 'TinkTerm',
-  //             dynamicFields: [
-  //               ...dm(4, [0, 1], {
-  //                 title: 'Nurodykite pašarų tinkamumo vartoti terminą',
-  //               }),
-  //               ...dm(4, [2, 3], {
-  //                 title: 'Nurodykite veterinarinių vaistų tinkamumo vartoti terminą',
-  //                 required: false,
-  //               }),
-  //             ],
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       {
-  //         title: 'Veiklos informacija',
-  //         description: 'Pateikite papildomą informaciją',
-  //         dynamicFields: [
-  //           ...dm(4, [0, 1, 2, 3], {
-  //             title: 'Informacija apie prekybos vietą',
-  //           }),
-  //         ],
-  //         questions: [
-  //           ...helperVeiklos('12.0', 12, {
-  //             dynamicFields: [
-  //               ...dm(4, [4, 5, 6, 7], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //           }),
-  //           q.location(12, 13, '', {
-  //             riskEvaluation: false,
-  //             spField: 'Koordinates',
-  //             dynamicFields: [
-  //               ...dm(4, [4, 5, 6, 7], {
-  //                 title: 'Žemėlapyje nurodykite veiklos vykdymo vietą',
-  //               }),
-  //               ...dm(4, [0, 1, 2, 3], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //           }),
-  //           q.input(13, 14, 'Nurodykite veiklos pavadinimą', {
-  //             riskEvaluation: false,
-  //             spField: 'VeiklosPavadinimas',
-  //             dynamicFields: [
-  //               ...dm(4, [0, 1, 2, 3], {
-  //                 title: 'Nurodykite prekybos vietos pavadinimą',
-  //               }),
-  //             ],
-  //           }),
-  //           q.text(14, 15, 'Nurodykite veiklą vykdančius fizinius ar juridinius asmenis', {
-  //             riskEvaluation: false,
-  //             required: false,
-  //             spField: 'VeikVykdAsmenys',
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       pages.aplinkybes(15),
-
-  //       // =======================================
-  //       {
-  //         ...pages.vaizdine(16),
-  //         description:
-  //           'Pridėkite vaizdinę medžiagą (nuotraukas, video) arba kitus dokumentus įrodančius pateikiamus pažeidimus. Pvz: įsigijimo čekis, produkto nuotraukos, ženklinimo informacija ir pan.',
-  //       },
-
-  //       // =======================================
-  //       pages.teises(18),
-  //     ],
-  //   },
-
-  // SURVEY 3
-  //   {
-  //     title: 'Veterinarinės srities pranešimų anketa',
-  //     icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  // <path d="M25.084 13.5C27.5693 13.5 29.584 11.4853 29.584 9C29.584 6.51472 27.5693 4.5 25.084 4.5C22.5987 4.5 20.584 6.51472 20.584 9C20.584 11.4853 22.5987 13.5 25.084 13.5Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M40.834 22.5C43.3193 22.5 45.334 20.4853 45.334 18C45.334 15.5147 43.3193 13.5 40.834 13.5C38.3487 13.5 36.334 15.5147 36.334 18C36.334 20.4853 38.3487 22.5 40.834 22.5Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M45.334 40.5C47.8193 40.5 49.834 38.4853 49.834 36C49.834 33.5147 47.8193 31.5 45.334 31.5C42.8487 31.5 40.834 33.5147 40.834 36C40.834 38.4853 42.8487 40.5 45.334 40.5Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M20.5839 22.5C22.0613 22.5 23.5242 22.791 24.8891 23.3564C26.254 23.9217 27.4942 24.7504 28.5389 25.795C29.5835 26.8397 30.4122 28.0799 30.9776 29.4448C31.5429 30.8097 31.8339 32.2726 31.8339 33.75V41.625C31.8333 43.507 31.1587 45.3266 29.9323 46.7542C28.7058 48.1818 27.0087 49.1229 25.1482 49.4071C23.2878 49.6914 21.3871 49.2999 19.7903 48.3036C18.1936 47.3074 17.0064 45.7723 16.4439 43.9763C15.4839 40.8788 13.4589 38.85 10.3689 37.89C8.57382 37.3278 7.03928 36.1415 6.04297 34.546C5.04666 32.9504 4.65439 31.0509 4.93715 29.1912C5.21992 27.3315 6.15903 25.6345 7.58455 24.4071C9.01007 23.1798 10.8278 22.5033 12.7089 22.5H20.5839Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // </svg>`,
-  //     spList: 'VETpranesimai',
-  //     authType: SurveyAuthType.OPTIONAL,
-  //     description:
-  //       'Pranešimai apie gyvūnų gerovės pažeidimus, veterinarijos paslaugų teikėjų pažeidimus teisės aktų reikalavimams ar pranešimai apie nelegaliai vykdomą veterinarinę veiklą.',
-  //     pages: [
-  //       // =======================================
-  //       pages.kontaktiniai(4),
-
-  //       // =======================================
-  //       {
-  //         ...pages.tema(),
-  //         questions: [
-  //           q.select(5, undefined, 'Pasirinkite dėl ko pranešate', {
-  //             spField: 'PranesimoTema',
-  //             riskEvaluation: false,
-  //             options: [
-  //               os('Dėl gyvūnų gerovės', '4.6'), // 0
-  //               os('Dėl gyvūnų augintinių veisimo veiklos', '4.10'), // 1
-  //               os('Dėl gyvūnų augintinių prekybos veiklos', '4.10'), // 2
-  //               os('Dėl ūkinių gyvūnų prekybos veiklos', '4.11'), // 3
-  //               os('Dėl gyvūnų transportavimo veiklos', '4.13'), // 4
-  //               os(
-  //                 'Dėl medžiojimo veiklos (veterinarinė priežiūra medžioklėje, pirminio apdorojimo aikštelės/patalpos, gyvūninių atliekų duobės)',
-  //                 '4.13',
-  //               ), // 5
-  //               os('Dėl šalutinių gyvūninių produktų tvarkymo veiklos', '4.13'), // 6
-  //               os('Dėl ūkininkavimo veiklos', '4.13'), // 7
-  //               os('Dėl veterinarinių paslaugų veiklos', '4.13'), // 8
-  //               os('Dėl kitos veterinarinės veiklos', '4.13'), // 9
-  //             ],
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       {
-  //         ...pages.detales(),
-  //         questions: [
-  //           q.date('4.6', 6, 'Nurodykite pranešamo įvykio datą', {
-  //             spField: 'IvykioData',
-  //           }),
-  //           q.date('4.10', 10, 'Nurodykite pranešamo įvykio datą', {
-  //             spField: 'IvykioData',
-  //           }),
-  //           q.date('4.11', 11, 'Nurodykite pranešamo įvykio datą', {
-  //             spField: 'IvykioData',
-  //           }),
-  //           q.date('4.13', 13, 'Nurodykite pranešamo įvykio datą', {
-  //             spField: 'IvykioData',
-  //           }),
-
-  //           q.multiselect(6, undefined, 'Pasirinkite gyvūno tipą', {
-  //             spField: 'GyvunoTipas',
-  //             riskEvaluation: false,
-  //             options: [
-  //               os('Ūkiniai gyvūnai', 8),
-  //               os('Gyvūnai augintiniai', 7),
-  //               os('Laukiniai gyvūnai', 9),
-  //             ],
-  //           }),
-
-  //           q.multiselect(7, undefined, 'Pasirinkite gyvūno augintinio rūšį', {
-  //             spField: 'Augintinis',
-  //             riskEvaluation: false,
-  //             options: [
-  //               os('Šunys', 12),
-  //               os('Katės', 12),
-  //               os('Šeškai', 12),
-  //               os('Graužikai', 12),
-  //               os('Ropliai', 12),
-  //               os('Paukščiai', 12),
-  //               os('Kita', '7.1'),
-  //             ],
-  //             condition: c(6),
-  //           }),
-
-  //           q.input('7.1', 12, 'Įveskite gyvūno augintinio rūšį', {
-  //             riskEvaluation: false,
-  //             condition: c(7),
-  //             spField: 'AugintinisKita',
-  //           }),
-
-  //           q.multiselect(8, undefined, 'Pasirinkite ūkinio gyvūno rūšį', {
-  //             condition: c(6),
-  //             riskEvaluation: false,
-  //             options: [
-  //               os('Galvijai', 12),
-  //               os('Arkliai', 12),
-  //               os('Avys', 12),
-  //               os('Ožkos', 12),
-  //               os('Kiaulės', 12),
-  //               os('Paukščiai', 12),
-  //               os('Bitės', 12),
-  //               os('Kita', '8.1'),
-  //             ],
-  //             spField: 'Ukinis',
-  //           }),
-
-  //           q.input('8.1', 12, 'Įveskite ūkinio gyvūno rūšį', {
-  //             riskEvaluation: false,
-  //             condition: c(8),
-  //             spField: 'UkinisKita',
-  //           }),
-
-  //           q.input(9, 12, 'Nurodykite laukinio gyvūno rūšį', {
-  //             riskEvaluation: false,
-  //             condition: c(6),
-  //             spField: 'Laukinis',
-  //           }),
-
-  //           q.multiselect(10, undefined, 'Pasirinkite gyvūno augintinio rūšį', {
-  //             spField: 'Augintinis',
-  //             riskEvaluation: false,
-  //             options: [
-  //               os('Šunys', 13),
-  //               os('Katės', 13),
-  //               os('Šeškai', 13),
-  //               os('Graužikai', 13),
-  //               os('Ropliai', 13),
-  //               os('Paukščiai', 13),
-  //               os('Kita', '10.1'),
-  //             ],
-  //           }),
-
-  //           q.input('10.1', 13, 'Įveskite gyvūno augintinio rūšį', {
-  //             spField: 'AugintinisKita',
-  //             riskEvaluation: false,
-  //             condition: c(10),
-  //           }),
-
-  //           q.multiselect(11, undefined, 'Pasirinkite ūkinio gyvūno rūšį', {
-  //             riskEvaluation: false,
-  //             spField: 'Ukinis',
-  //             options: [
-  //               os('Galvijai', 13),
-  //               os('Arkliai', 13),
-  //               os('Avys', 13),
-  //               os('Ožkos', 13),
-  //               os('Kiaulės', 13),
-  //               os('Paukščiai', 13),
-  //               os('Bitės', 13),
-  //               os('Kita', '11.1'),
-  //             ],
-  //           }),
-
-  //           q.input('11.1', 13, 'Įveskite ūkinio gyvūno rūšį', {
-  //             spField: 'UkinisKita',
-  //             riskEvaluation: false,
-  //             condition: c(11),
-  //           }),
-
-  //           q.multiselect(12, 14, 'Pasirinkite apie kokius gyvūnų gerovės  pažeidimus pranešate', {
-  //             options: o([
-  //               'Vakcinacijos pažeidimai',
-  //               'Ženklinimo/registravimo pažeidimai',
-  //               'Nėra užtikrinama gyvūnų gerovė, gyvūnais nepakankamai rūpinamasi, neužtikrinami jų fiziologiniai poreikiai, gyvūnai kitaip kankinami',
-  //               'Laikymo sąlygų keliančių grėsmę gyvūnų sveikatai pažeidimai',
-  //               'Nesuteikiama reikalinga veterinarinė pagalba',
-  //               'Šėrimo/girdymo pažeidimai',
-  //               'Kiti pažeidima',
-  //             ]),
-  //             spField: 'PazTipas5',
-  //           }),
-
-  //           q.multiselect(13, '13.1', 'Pasirinkite apie kokius veiklos pažeidimus pranešate', {
-  //             options: o([
-  //               'Kiti pažeidimai', // 0
-  //               'Laikymo sąlygų keliančių grėsmę gyvūnų sveikatai pažeidimai', // 1
-  //               'Nepakankamas plotas gyvūnų skaičiui', // 2
-  //               'Nepateikiama privalomoji informacija apie vykdomą veiklą', // 3
-  //               'Nesuteikiama reikalinga veterinarinė pagalba', // 4
-  //               'Netinkamai pildomi veiklos dokumentai', // 5
-  //               'Netinkamai tvarkomos atliekos', // 6
-  //               'Netinkamos sveikatos būklės gyvūnai', // 7
-  //               'Neužtikrinami biologinės saugos reikalavimai', // 8
-  //               'Nėra užtikrinama gyvūnų gerovė, gyvūnais nepakankamai rūpinamasi, neužtikrinami jų fiziologiniai poreikiai, gyvūnai kitaip kankinami', // 9
-  //               'Pardavinėjami per jauni gyvūnai', // 10
-  //               'Patalpos nehigieniškos, neatitinka nustatytų reikalavimų (panaikinti dublikatą, yra du vienodi pasirinkimai)', // 11
-  //               'Vakcinacijos pažeidimai', // 12
-  //               'Veikla be galiojančių veterinarijos praktikos licencijų', // 13
-  //               'Vykdoma veikla be leidimų/registracijos', // 14
-  //               'Šėrimo/girdymo pažeidimai', // 15
-  //               'Ženklinimo/registravimo pažeidimai', // 16
-  //             ]),
-  //             spField: 'PazTipas5',
-  //             dynamicFields: [
-  //               ...dm(5, [1], {
-  //                 options: [16, 12, 7, 1, 9, 4, 15, 14, 11, 5, 3, 0, 2],
-  //               }),
-  //               ...dm(5, [2], {
-  //                 options: [16, 12, 7, 10, 1, 9, 4, 15, 14, 11, 5, 3, 0, 2],
-  //               }),
-  //               ...dm(5, [3], {
-  //                 options: [16, 7, 10, 1, 9, 4, 15, 14, 11, 8, 5, 3, 0, 2],
-  //               }),
-  //               ...dm(5, [4], {
-  //                 options: [16, 1, 9, 4, 15, 14, 11, 8, 5, 0],
-  //               }),
-  //               ...dm(5, [5], {
-  //                 options: [14, 11, 8, 6, 5, 0],
-  //               }),
-  //               ...dm(5, [6], {
-  //                 options: [14, 11, 8, 5, 0],
-  //               }),
-  //               ...dm(5, [7], {
-  //                 options: [16, 7, 1, 9, 4, 15, 14, 11, 8, 6, 5, 0, 2],
-  //               }),
-  //               ...dm(5, [8], {
-  //                 options: [16, 1, 9, 4, 13, 14, 11, 8, 6, 5, 0],
-  //               }),
-  //               ...dm(5, [9], {
-  //                 options: [14, 11, 8, 6, 5, 0],
-  //               }),
-  //             ],
-  //           }),
-
-  //           q.text('13.1', '16.0', 'Nurodykite dėl kokios veiklos pranešate', {
-  //             dynamicFields: [
-  //               ...dm(5, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //             spField: 'VeikTipas',
-  //           }),
-  //         ],
-  //       },
-
-  //       {
-  //         title: 'Laikymo vietos informacija',
-  //         questions: [
-  //           q.location(14, 15, 'Žemėlapyje nurodykite gyvūno(-ų) laikymo vietą', {
-  //             riskEvaluation: false,
-  //             spField: 'Koordinates',
-  //           }),
-
-  //           q.text(15, 19, 'Nurodykite gyvūno(-ų) laikytojus/globėjus', {
-  //             required: false,
-  //             riskEvaluation: false,
-  //             spField: 'Laikytojai',
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       {
-  //         title: 'Veiklos vietos informacija',
-  //         description: 'Pateikite papildomą informaciją',
-  //         dynamicFields: [
-  //           ...dm(5, [0], {
-  //             title: 'Veiklos informacija',
-  //           }),
-  //         ],
-  //         questions: [
-  //           q.input('16.0', '16.1', 'Nurodykite transporto priemonės valstybinius numerius', {
-  //             dynamicFields: [
-  //               // $ne: 4
-  //               ...dm(5, [0, 1, 2, 3, 5, 6, 7, 8, 9], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //             spField: 'PapInfo',
-  //           }),
-  //           ...helperVeiklos('16.1', 16, {
-  //             dynamicFields: [
-  //               // $ne: 3, 2
-  //               ...dm(5, [0, 1, 4, 5, 6, 7, 8, 9], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //           }),
-  //           q.location(16, 17, 'Žemėlapyje nurodykite veiklos vykdymo vietą', {
-  //             spField: 'Koordinates',
-  //             riskEvaluation: false,
-  //             dynamicFields: [
-  //               ...dm(5, [3, 2], {
-  //                 condition: false,
-  //               }),
-  //             ],
-  //           }),
-  //           q.input(17, 18, 'Nurodykite veiklos pavadinimą', {
-  //             spField: 'VeiklosPavadinimas',
-  //             riskEvaluation: false,
-  //             required: true,
-  //             dynamicFields: [
-  //               ...dm(5, [5], {
-  //                 title: 'Nurodykite medžioklės plotų vieneto pavadinimą',
-  //               }),
-  //               ...dm(5, [4, 6, 7, 8, 9], {
-  //                 required: false,
-  //               }),
-  //             ],
-  //           }),
-  //           q.text(18, 19, 'Nurodykite veiklą vykdančius fizinius ar juridinius asmenis', {
-  //             riskEvaluation: false,
-  //             required: true,
-  //             spField: 'VeikVykdAsmenys',
-  //             dynamicFields: [
-  //               ...dm(5, [5], {
-  //                 title: 'Nurodykite pažeidimus vykdančius fizinius asmenis',
-  //               }),
-  //               ...dm(5, [4, 6, 7, 8, 9], {
-  //                 required: false,
-  //               }),
-  //             ],
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       pages.aplinkybes(19, {
-  //         required: true,
-  //       }),
-
-  //       // =======================================
-  //       {
-  //         ...pages.vaizdine(20),
-  //         description:
-  //           'Pridėkite vaizdinę medžiagą (nuotraukas, video) arba kitus dokumentus įrodančius pateikiamus pažeidimus. Pvz: įsigijimo čekis, produkto nuotraukos, ženklinimo informacija ir pan.',
-  //       },
-
-  //       // =======================================
-  //       pages.teises(22),
-  //     ],
-  //   },
-
-  // SURVEY 4
-  //   {
-  //     title: 'Maisto sukeltų protrūkių pranešimas',
-  //     icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  // <path d="M16.417 47.25H38.917" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M27.667 47.25C33.0376 47.25 38.1883 45.1165 41.9859 41.3189C45.7835 37.5213 47.917 32.3706 47.917 27H7.41699C7.41699 32.3706 9.55047 37.5213 13.3481 41.3189C17.1457 45.1165 22.2964 47.25 27.667 47.25Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M26.2716 26.9998C24.9089 27.0125 23.5918 26.5095 22.5845 25.5917C21.5772 24.674 20.9541 23.4093 20.8402 22.0513C20.7263 20.6933 21.1301 19.3425 21.9705 18.2698C22.8109 17.197 24.0259 16.4817 25.3716 16.2673C25.1562 15.3138 25.2036 14.3197 25.5088 13.3911C25.814 12.4624 26.3655 11.634 27.1046 10.9942C27.8437 10.3545 28.7426 9.9273 29.7054 9.75834C30.6682 9.58937 31.6589 9.68492 32.5716 10.0348C32.9713 9.40562 33.4969 8.866 34.1154 8.44991C34.7338 8.03381 35.4317 7.75026 36.1651 7.61711C36.8985 7.48396 37.6515 7.50408 38.3768 7.67622C39.102 7.84835 39.7838 8.16878 40.3791 8.61731C41.4176 7.80106 42.7193 7.39377 44.0379 7.4725C45.3564 7.55122 46.6004 8.1105 47.5344 9.04452C48.4684 9.97854 49.0277 11.2225 49.1064 12.5411C49.1852 13.8596 48.7779 15.1613 47.9616 16.1998C48.4697 16.8747 48.8123 17.6593 48.962 18.4906C49.1117 19.3219 49.0643 20.1768 48.8236 20.9865C48.5829 21.7962 48.1556 22.5381 47.576 23.1526C46.9965 23.7671 46.2808 24.2371 45.4866 24.5248C45.6919 25.3347 45.715 26.18 45.5541 26.9998" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M29.917 27L38.917 18" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M25.1921 16.3125C23.958 14.9969 22.3561 14.0836 20.5953 13.6916C18.8345 13.2996 16.9965 13.4471 15.3208 14.115C13.645 14.7828 12.2094 15.94 11.2009 17.4357C10.1925 18.9314 9.65797 20.6962 9.66711 22.5C9.66711 24.1425 10.1171 25.6725 10.8821 27" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // </svg>`,
-  //     spList: 'PRTpranesimai',
-  //     authType: SurveyAuthType.OPTIONAL,
-  //     description:
-  //       'Pranešimai apie ligų protrūkius, kurie įtariama, kad sukelti vartojant tam tikrus maisto produktus, taip pat kitus su maisto produktų vartojimu susijusius sveikatos pažeidimus.',
-  //     pages: [
-  //       // =======================================
-  //       pages.kontaktiniai(3),
-
-  //       // =======================================
-  //       {
-  //         ...pages.detales(),
-  //         questions: [
-  //           q.date(4, 5, 'Nurodykite produktų ar patiekalų įsigijimo/gavimo datą', {
-  //             spField: 'IvykioData',
-  //           }),
-  //           q.datetime(
-  //             5,
-  //             '5.1',
-  //             'Nurodykite produkto sukėlusio sveikatos sutrikimus vartojimo datą ir laiką',
-  //             {
-  //               riskEvaluation: false,
-  //               spField: 'VartojimoData',
-  //             },
-  //           ),
-  //           q.select('5.1', 6, 'Nurodykite vartotų produktų patiekalų rūšį', {
-  //             required: true,
-  //             spField: 'ProdTipas',
-  //             options: o([
-  //               'Gyvūninės kilmės produktai/patiekalai',
-  //               'Negyvūninės kilmės produktai patiekalai',
-  //               'Nealkoholiniai gėrimai',
-  //               'Alkoholiniai gėrimai',
-  //               'Maisto papildai',
-  //               'Specialiosios paskirties maisto produktai',
-  //             ]),
-  //           }),
-  //           q.datetime(6, 7, 'Nurodykite pirmųjų simptomų pasireiškimo datą ir laiką', {
-  //             spField: 'SimptData',
-  //           }),
-  //           q.text(7, 8, 'Nurodykite pasireiškusius simptomus', {
-  //             spField: 'Simptomai',
-  //           }),
-  //           q.radio(8, 9, 'Ar maistas buvo vartojamas organizuotame renginyje?', {
-  //             options: o(['Taip', 'Ne']),
-  //             spField: 'OrgReng',
-  //           }),
-  //           q.radio(9, undefined, 'Ar kiti jums žinomi asmenys vartojo tą patį maistą?', {
-  //             riskEvaluation: false,
-  //             options: [os('Taip', 10), os('Ne', 11), os('Nežinau', 11)],
-  //             spField: 'PapAsm',
-  //           }),
-  //           q.radio(
-  //             10,
-  //             11,
-  //             'Ar kitiems jums žinomiems asmenims vartojusiems tą patį maistą taip pat pasireiškė simptomai?',
-  //             {
-  //               riskEvaluation: false,
-  //               options: o(['Taip', 'Ne', 'Nežinau']),
-  //               spField: 'SusirgeAsm',
-  //             },
-  //           ),
-  //           q.text(11, 12, 'Nurodykite vartoto maisto pavadinimą', {
-  //             riskEvaluation: false,
-  //             spField: 'Pavadinimas',
-  //           }),
-  //           q.text(12, 13, 'Nurodykite maisto gamintoją', {
-  //             riskEvaluation: false,
-  //             spField: 'Gamintojas',
-  //           }),
-  //           q.date(13, 14, 'Nurodykite produkto tinkamumo vartoti terminą', {
-  //             required: false,
-  //             riskEvaluation: false,
-  //             spField: 'TinkTerm',
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       {
-  //         ...pages.papildoma(),
-  //         questions: [
-  //           q.location(14, 15, 'Žemėlapyje nurodykite produktų įsigijimo/tiekimo vietą', {
-  //             riskEvaluation: false,
-  //             spField: 'Koordinates',
-  //           }),
-  //           q.input(15, 16, 'Nurodykite vietos pavadinimą', {
-  //             riskEvaluation: false,
-  //             required: false,
-  //             spField: 'VeiklosPavadinimas',
-  //           }),
-  //           q.text(
-  //             16,
-  //             17,
-  //             'Nurodykite už produktų tiekimą/pardavimą atsakingus fizinius ar juridinius asmenis',
-  //             {
-  //               required: false,
-  //               riskEvaluation: false,
-  //               spField: 'VeikVykdAsmenys',
-  //             },
-  //           ),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       pages.aplinkybes(
-  //         17,
-  //         {
-  //           required: true,
-  //         },
-  //         [
-  //           q.radio(
-  //             18,
-  //             undefined,
-  //             'Ar dėl kilusio sveikatos sutrikdymo kreipėtės į gydymo įstaigą?',
-  //             {
-  //               riskEvaluation: false,
-  //               options: [os('Taip', 19), os('Ne', 20)],
-  //               spField: 'KreipGyd',
-  //             },
-  //           ),
-  //           q.input(19, 20, 'Nurodykite sveikatos priežiūros įstaigos į kurią kreipėtės pavadinimą', {
-  //             riskEvaluation: false,
-  //             condition: c(18),
-  //             spField: 'Aplinkybes',
-  //           }),
-  //         ],
-  //       ),
-
-  //       // =======================================
-  //       {
-  //         ...pages.vaizdine(20),
-  //         description:
-  //           'Pridėkite vaizdinę medžiagą (nuotraukas, video) arba kitus dokumentus įrodančius pateikiamus pažeidimus. Pvz: įsigijimo čekis, produkto nuotraukos, ženklinimo informacija ir pan.',
-  //       },
-
-  //       // =======================================
-  //       pages.teises(22),
-  //     ],
-  //   },
-
-  // SURVEY 5
-  //   {
-  //     title: 'Viešai tiekiamo geriamojo vandens pranešimai',
-  //     icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  // <path d="M34.2 49.5H19.8C18.6841 49.5062 17.6056 49.0975 16.7741 48.3532C15.9425 47.609 15.4172 46.5823 15.3 45.4725L11.25 6.75H42.75L38.6775 45.4725C38.5607 46.5784 38.0386 47.6019 37.2118 48.3457C36.385 49.0894 35.3121 49.5006 34.2 49.5Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M13.5 27C15.4473 25.5395 17.8158 24.75 20.25 24.75C22.6842 24.75 25.0527 25.5395 27 27C28.9473 28.4605 31.3158 29.25 33.75 29.25C36.1842 29.25 38.5527 28.4605 40.5 27" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // </svg>`,
-  //     spList: 'VTVpranesimai',
-  //     authType: SurveyAuthType.REQUIRED,
-  //     description:
-  //       'Pranešimai apie viešai tiekiamo geriamojo vandens neatitikimus kokybės ar saugos normoms.',
-  //     pages: [
-  //       // =======================================
-  //       pages.kontaktiniai(2, {}, [
-  //         q.input(3, 4, 'Prašome nurodyti savo kontaktinį telefono numerį', {
-  //           riskEvaluation: false,
-  //           authRelation: AuthRelation.PHONE,
-  //           spField: 'PranTelefonas',
-  //         }),
-  //       ]),
-
-  //       // =======================================
-  //       {
-  //         ...pages.detales(),
-  //         questions: [
-  //           q.date(4, 5, 'Nurodykite pranešamo įvykio datą', {
-  //             riskEvaluation: false,
-  //             spField: 'IvykioData',
-  //           }),
-  //           q.location(5, 6, 'Nurodykite vandens tiekimo vietos adresą', {
-  //             riskEvaluation: false,
-  //             spField: 'Koordinates',
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       pages.aplinkybes(6, {
-  //         required: true,
-  //       }),
-
-  //       // =======================================
-  //       pages.vaizdine(7),
-
-  //       // =======================================
-  //       pages.teises(9),
-  //     ],
-  //   },
-
-  //  SURVEY 6
-  //   {
-  //     title: 'Įtarimų dėl gyvūnų ligų pranešimų anketa',
-  //     icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  // <path d="M15.3418 49.5V43.4925C15.3418 40.32 16.6018 37.26 18.8518 35.01C21.1018 32.76 24.1618 31.5 27.3343 31.5C33.9718 31.5 39.3268 36.8775 39.3268 43.4925V49.5H15.3418Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M44.5918 38.9927V34.4927" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M4.83398 49.5001H15.3415V44.2576L4.83398 39.0151V49.5226V49.5001Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M18.8518 35.01L15.3418 31.5L18.3343 28.5075L16.8268 27" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M15.3418 49.4999C15.3418 47.9024 15.9718 46.3724 17.0968 45.2474C18.2218 44.1224 19.7518 43.4924 21.3268 43.4924C21.3268 40.1849 24.0043 37.4849 27.3343 37.4849C33.9493 37.4849 39.3268 42.8624 39.3268 49.4774H15.3193L15.3418 49.4999Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M49.8336 44.2576C49.8336 41.3551 47.4936 39.0151 44.5911 39.0151C41.6886 39.0151 39.3486 41.3551 39.3486 44.2576V49.5001H44.5911C47.4936 49.5001 49.8336 47.1601 49.8336 44.2576Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M30.1243 19.3277L39.7318 23.5352C42.9268 24.9302 46.6393 23.4677 48.0343 20.2952C49.4293 17.1002 47.9668 13.3877 44.7943 11.9927L35.1868 7.78517C31.9918 6.39017 28.2793 7.85267 26.8843 11.0252C25.4893 14.2202 26.9518 17.9327 30.1243 19.3277Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M42.2736 17.7524C41.1261 15.8399 39.2586 15.1874 37.0761 15.6374C35.1411 16.0424 33.5886 15.2099 32.6436 13.5449" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M26.8612 11.025L24.1387 9.85498" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M27.2661 16.8525L24.7461 18.405" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M43.4893 23.9399L44.0743 26.8424" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M48.0342 20.2725L50.7567 21.465" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M47.6289 14.4675L50.1714 12.915" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M31.4063 7.38008L30.8213 4.45508" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M34.9161 21.4873L33.7236 24.2098" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M39.9561 9.78744L41.1486 7.06494" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // </svg>`,
-  //     spList: 'GLPranesimai',
-  //     authType: SurveyAuthType.NONE,
-  //     description:
-  //       'Pranešimai apie pastebėtas laukinių gyvūnų gaišenas, galimai susijusias su plintančiomis gyvūnų ligomis, pranešimai apie pastebėtas ūkinių gyvūnų gaišenas.',
-
-  //     pages: [
-  //       // =======================================
-  //       pages.kontaktiniai(
-  //         1,
-  //         {
-  //           required: true,
-  //           riskEvaluation: false,
-  //           authRelation: null,
-  //         },
-  //         [
-  //           q.input(2, '2.0', 'Prašome nurodyti savo kontaktinį telefono numerį', {
-  //             required: true,
-  //             riskEvaluation: false,
-  //             spField: 'PranTelefonas',
-  //           }),
-  //         ],
-  //       ),
-
-  //       // =======================================
-  //       {
-  //         ...pages.detales(),
-  //         questions: [
-  //           q.date('2.0', '3.1', 'Nurodykite pranešamo įvykio datą', {
-  //             spField: 'IvykioData',
-  //           }),
-
-  //           q.multiselect('3.1', undefined, 'Pasirinkite gyvūno tipą', {
-  //             riskEvaluation: false,
-  //             spField: 'GyvunoTipas',
-  //             options: [
-  //               os('Ūkiniai gyvūnai', '3.1.8'),
-  //               os('Gyvūnai augintiniai', '3.1.7'),
-  //               os('Laukiniai gyvūnai', '3.1.9'),
-  //             ],
-  //           }),
-
-  //           q.multiselect('3.1.7', undefined, 'Pasirinkite gyvūno augintinio rūšį', {
-  //             riskEvaluation: false,
-  //             options: [
-  //               os('Šunys', '3.2'),
-  //               os('Katės', '3.2'),
-  //               os('Šeškai', '3.2'),
-  //               os('Graužikai', '3.2'),
-  //               os('Ropliai', '3.2'),
-  //               os('Paukščiai', '3.2'),
-  //               os('Kita', '3.1.7.1'),
-  //             ],
-  //             condition: c('3.1'),
-  //             spField: 'Augintinis',
-  //           }),
-
-  //           q.input('3.1.7.1', '3.2', 'Įveskite gyvūno augintinio rūšį', {
-  //             riskEvaluation: false,
-  //             condition: c('3.1.7'),
-  //             spField: 'AugintinisKita',
-  //           }),
-
-  //           q.multiselect('3.1.8', undefined, 'Pasirinkite ūkinio gyvūno rūšį', {
-  //             condition: c('3.1'),
-  //             riskEvaluation: false,
-  //             options: [
-  //               os('Galvijai', '3.2'),
-  //               os('Arkliai', '3.2'),
-  //               os('Avys', '3.2'),
-  //               os('Ožkos', '3.2'),
-  //               os('Kiaulės', '3.2'),
-  //               os('Paukščiai', '3.2'),
-  //               os('Bitės', '3.2'),
-  //               os('Kita', '3.1.8.1'),
-  //             ],
-  //             spField: 'Ukinis',
-  //           }),
-
-  //           q.input('3.1.8.1', '3.2', 'Įveskite ūkinio gyvūno rūšį', {
-  //             riskEvaluation: false,
-  //             condition: c('3.1.8'),
-  //             spField: 'UkinisKita',
-  //           }),
-
-  //           q.multiselect('3.1.9', undefined, 'Pasirinkite laukinio gyvūno rūšį', {
-  //             condition: c('3.1'),
-  //             riskEvaluation: false,
-  //             options: [
-  //               os('Paukštis', '3.2'),
-  //               os('Šernas', '3.2'),
-  //               os('Lapė', '3.2'),
-  //               os('Usūrinis šuo', '3.2'),
-  //               os('Kita', '3.1.9.1'),
-  //             ],
-  //             spField: 'Laukinis',
-  //           }),
-
-  //           q.input('3.1.9.1', '3.2', 'Įveskite laukinio gyvūno rūšį', {
-  //             riskEvaluation: false,
-  //             condition: c('3.1.9'),
-  //             spField: 'LaukinisKita',
-  //           }),
-
-  //           q.radio('3.2', undefined, 'Pasirinkite apie ką pranešate', {
-  //             riskEvaluation: false,
-  //             options: [os('Gyvūnų gaišenos', 4), os('Gyvūnų ligos', '3.3')],
-  //             spField: 'PranesimoTema',
-  //           }),
-
-  //           q.text('3.3', '3.4', 'Aprašykite gyvūno(-ų) simptomatiką', {
-  //             condition: c('3.2'),
-  //             spField: 'Simptomai',
-  //           }),
-
-  //           q.location('3.4', 5, 'Nurodykite gyvūno(-ų) laikymo vietą', {
-  //             condition: {
-  //               question: '3.2',
-  //               valueIndex: 1,
-  //             },
-  //             riskEvaluation: false,
-  //             spField: 'Koordinates',
-  //           }),
-
-  //           q.location(4, 5, 'Nurodykite gaišenos radimo vietą', {
-  //             condition: c('3.2'),
-  //             riskEvaluation: false,
-  //             spField: 'Koordinates',
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       {
-  //         ...pages.papildoma(),
-  //         questions: [
-  //           q.text(5, 6, 'Pateikite papildomą informaciją', {
-  //             riskEvaluation: false,
-  //             spField: 'Aplinkybes',
-  //           }),
-  //         ],
-  //       },
-
-  //       // =======================================
-  //       {
-  //         ...pages.vaizdine(6),
-  //         questions: [
-  //           q.files(6, undefined, 'Pridėkite vaizdinę ar kitą medžiagą', {
-  //             required: false,
-  //             riskEvaluation: false,
-  //             spField: 'Attachments',
-  //           }),
-  //         ],
-  //       },
-  //     ],
-  //   },
 ];
 
 @Service({
