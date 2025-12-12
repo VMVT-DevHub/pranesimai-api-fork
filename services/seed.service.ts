@@ -1313,7 +1313,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               }),
             ],
           }),
-          q.address(42, 48, 'Info iš registrų centro adresas', {
+          q.address(42, 48, 'Nurodykite veiklos vietos adresą', {
             riskEvaluation: false,
             required: true,
             spField: 'ar_address',
