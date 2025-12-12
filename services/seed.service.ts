@@ -1313,58 +1313,10 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               }),
             ],
           }),
-          q.input(42, 43, 'Info iš registrų centro savivaldybė', {
+          q.address(42, 48, 'Info iš registrų centro adresas', {
             riskEvaluation: false,
             required: true,
-            spField: 'jar_sav',
-            condition: [
-              {
-                question: 41,
-                valueIndex: 0,
-              },
-            ],
-            dynamicFields: [
-              ...dm(4, [4], {
-                condition: false,
-              }),
-            ],
-          }),
-          q.input(43, 44, 'Info iš registrų centro gyvenvietė', {
-            riskEvaluation: false,
-            required: true,
-            spField: 'jar_gyv',
-            condition: [
-              {
-                question: 41,
-                valueIndex: 0,
-              },
-            ],
-            dynamicFields: [
-              ...dm(4, [4], {
-                condition: false,
-              }),
-            ],
-          }),
-          q.input(44, 45, 'Info iš registrų centro gatvė', {
-            riskEvaluation: false,
-            required: true,
-            spField: 'jar_gatv',
-            condition: [
-              {
-                question: 41,
-                valueIndex: 0,
-              },
-            ],
-            dynamicFields: [
-              ...dm(4, [4], {
-                condition: false,
-              }),
-            ],
-          }),
-          q.input(45, 48, 'Info iš registrų centro pastato numeris', {
-            riskEvaluation: false,
-            required: true,
-            spField: 'jar_num',
+            spField: 'ar_address',
             condition: [
               {
                 question: 41,
