@@ -1444,41 +1444,10 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           ),
 
           //MSP5
-
-          q.input(78, 79, 'Info iš registrų centro savivaldybė', {
-            spField: 'jar_sav',
+          q.address(78, 82, 'Nurodykite veiklos vietos adresą', {
             riskEvaluation: false,
             required: true,
-            dynamicFields: [
-              ...dm(4, [0, 1, 2, 3], {
-                condition: false,
-              }),
-            ],
-          }),
-          q.input(79, 80, 'Info iš registrų centro gyvenvietė', {
-            spField: 'jar_gyv',
-            riskEvaluation: false,
-            required: true,
-            dynamicFields: [
-              ...dm(4, [0, 1, 2, 3], {
-                condition: false,
-              }),
-            ],
-          }),
-          q.input(80, 81, 'Info iš registrų centro gatvė', {
-            spField: 'jar_gatv',
-            riskEvaluation: false,
-            required: true,
-            dynamicFields: [
-              ...dm(4, [0, 1, 2, 3], {
-                condition: false,
-              }),
-            ],
-          }),
-          q.input(81, 82, 'Info iš registrų centro pastato numeris', {
-            spField: 'jar_num',
-            riskEvaluation: false,
-            required: true,
+            spField: 'ar_address',
             dynamicFields: [
               ...dm(4, [0, 1, 2, 3], {
                 condition: false,

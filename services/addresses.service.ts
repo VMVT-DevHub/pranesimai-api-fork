@@ -40,13 +40,46 @@ export default class AddressesService extends moleculer.Service {
     params: {
       gyv: 'number|convert',
       q: 'string',
+      gat: { type: 'number', optional: true, convert: true },
       top: { type: 'number', optional: true, convert: true },
     },
   })
-  async findAdr(ctx: Context<{ gyv: number; q: string; top?: number }>) {
+  async findAdr(ctx: Context<{ gyv: number; q: string; gat?: number; top?: number }>) {
+    const { gyv, q, gat, top = 10 } = ctx.params;
+
+    const qs = new URLSearchParams({
+      gyv: String(gyv),
+      q,
+      top: String(top),
+    });
+
+    if (gat != null) {
+      qs.set('gat', String(gat));
+    }
+
+    const url = `${this.baseUrl}/ar/find/adr?${qs.toString()}`;
+
+    const result: any = await this.broker.call('http.get', {
+      url,
+      opt: { responseType: 'json' },
+    });
+
+    return result;
+  }
+
+  @Action({
+    name: 'searchGat',
+    rest: 'GET /search/gat',
+    params: {
+      gyv: 'number|convert',
+      q: 'string',
+      top: { type: 'number', optional: true, convert: true },
+    },
+  })
+  async searchGat(ctx: Context<{ gyv: number; q: string; top?: number }>) {
     const { gyv, q, top = 10 } = ctx.params;
 
-    const url = `${this.baseUrl}/ar/find/adr?gyv=${gyv}&q=${encodeURIComponent(q)}&top=${top}`;
+    const url = `${this.baseUrl}/ar/search/gat?gyv=${gyv}&q=${encodeURIComponent(q)}&top=${top}`;
 
     const result: any = await this.broker.call('http.get', {
       url,
