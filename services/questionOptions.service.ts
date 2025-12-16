@@ -23,6 +23,7 @@ interface Fields extends CommonFields {
   nextQuestion: Question['id'];
   title: string;
   description: string;
+  requiresAuth: boolean;
   hint: string;
   icon: string;
   priority: number;
@@ -79,6 +80,7 @@ export type QuestionOption<
 
       title: 'string',
       description: 'string',
+      requiresAuth: 'boolean',
       hint: 'string',
       icon: 'string',
       data: 'any',

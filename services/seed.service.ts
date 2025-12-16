@@ -58,6 +58,7 @@ type SurveyTemplate = {
         nextQuestion?: string; // excel id
         title: QuestionOption['title'];
         description?: QuestionOption['description'];
+        requiresAuth?: QuestionOption['requiresAuth'];
       }>;
     }>;
   }>;
@@ -128,10 +129,16 @@ const o = (options: string[]) =>
   }));
 
 // single option helper
-const os = (title: string, nextQuestion?: number | string, description?: string) => ({
+const os = (
+  title: string,
+  nextQuestion?: number | string,
+  description?: string,
+  requiresAuth?: boolean,
+) => ({
   title,
   nextQuestion: nextQuestion && `${nextQuestion}`,
   description: description && `${description}`,
+  requiresAuth: requiresAuth && requiresAuth,
 });
 
 const helperVeiklos = (id: number | string, idOut: number | string, qa: QuestionExtends = {}) => [
@@ -381,15 +388,32 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             required: true,
             riskEvaluation: false,
             options: [
-              os('Pranešimai apie maisto produktus ar patiekalus', 69, 'MSP1'), // 0
-              os('Pranešimai apie sveikatos sutrikdymus', 58, 'MSP2'), // 1
+              os(
+                'Pranešimai apie maisto produktus ar patiekalus',
+                69,
+                'Skirta pranešti apie konkrečius maisto produktus ar patiekalus, kai įtariama, kad jie yra galimai nesaugūs, netinkamai laikomi, paruošti ar paženklinti, ir tai gali kelti riziką vartotojų sveikatai.',
+              ), // 0
+              os(
+                'Pranešimai apie sveikatos sutrikdymus',
+                58,
+                'Skirta pranešti apie sveikatos sutrikimus, siejamus su galimai nesaugaus maisto produkto ar patiekalo vartojimu, kai įtariama, kad sutrikimą lėmė maisto saugos reikalavimų nesilaikymas, o ne individualios organizmo reakcijos ar virusinės ligos.',
+              ), // 1
               os(
                 'Pranešimai apie maisto tvarkymo veiklos pažeidimus ir/ar nelegaliai vykdomą veiklą',
                 69,
-                'MSP3',
+                'Skirta pranešti apie maisto tvarkymo subjektų veiklą (pvz., gamyklas, kavines, restoranus, prekybos vietas), kai fiksuojami visos veiklos pažeidimai, tokie kaip higienos reikalavimų nesilaikymas, netinkamas atliekų tvarkymas, patalpų ar įrangos būklė, darbuotojų higiena, taip pat apie nelegaliai vykdomą maisto tvarkymo veiklą.',
               ), // 2
-              os('Pranešimai apie su maistu besiliečiančias medžiagas', 69, 'MSP4'), // 3
-              os('Pranešimai apie viešai tiekiamo geriamojo vandens pažeidimus', 69, 'MSP5'), // 4
+              os(
+                'Pranešimai apie su maistu besiliečiančias medžiagas',
+                69,
+                'Skirta pranešti apie pakuotes, indus, įrankius, gertuvės ar kitus gaminius, skirtus liestis su maistu, kai įtariama, kad jie yra netinkamai paženklinti, neatitinka saugos reikalavimų, turi neleistinų medžiagų, skleidžia neįprastą kvapą, lydosi ar kitaip gali kelti riziką žmonių sveikatai.',
+              ), // 3
+              os(
+                'Pranešimai apie viešai tiekiamo geriamojo vandens pažeidimus',
+                69,
+                'Skirta pranešti apie viešai tiekiamo geriamojo vandens (šalto vandens) saugos, kokybės ar tiekimo reikalavimų pažeidimus, galinčius kelti grėsmę žmonių sveikatai. Ši anketa taikoma tik centralizuotai tiekiamam geriamajam vandeniui; privatūs šuliniai ar individualūs vandens gręžiniai nepriklauso VMVT kontrolei, taip pat nevertinami karšto vandens tiekimo ar jo kokybės klausimai. Tais atvejais, kai pranešimas susijęs su gyvenamąja vieta, VMVT, siekdama objektyviai nustatyti galimus neatitikimus, atvyksta į vietą ir paima vandens mėginį laboratoriniams tyrimams.',
+                true,
+              ), // 4
             ],
             spField: 'pran_tema',
           }),
@@ -1617,6 +1641,7 @@ export default class SeedService extends moleculer.Service {
             const option: QuestionOption = await this.broker.call('questionOptions.create', {
               ...optionData,
               description: optionData.description,
+              requiresAuth: optionData.requiresAuth,
               question: questionByExcelId[excelId].id,
               priority: options.length - options.indexOf(optionItem),
               nextQuestion:

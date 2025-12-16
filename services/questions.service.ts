@@ -58,6 +58,7 @@ interface Fields extends CommonFields {
   type: QuestionType;
   title?: string;
   hint?: string;
+  requiresAuth?: string;
   description?: string;
   nextQuestion?: Question['id'];
   authRelation?: AuthRelation;
@@ -142,6 +143,7 @@ export type Question<
       title: 'string',
       description: 'string',
       hint: 'string',
+      requiresAuth: 'boolean',
 
       priority: {
         type: 'number',
