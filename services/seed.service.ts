@@ -1500,6 +1500,628 @@ const SURVEYS_SEED: SurveyTemplate[] = [
       pages.teises(56),
     ],
   },
+  {
+    title: 'Veterinarinės srities pranešimai',
+    icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M23.6253 46.1248L46.1253 23.6248C47.1766 22.5944 48.0133 21.3659 48.5869 20.0102C49.1605 18.6545 49.4597 17.1985 49.4672 15.7265C49.4746 14.2544 49.1901 12.7955 48.6302 11.4341C48.0703 10.0726 47.2461 8.83572 46.2052 7.79481C45.1643 6.75391 43.9274 5.92967 42.5659 5.36978C41.2045 4.80988 39.7456 4.52542 38.2736 4.53286C36.8015 4.54029 35.3455 4.83947 33.9898 5.41309C32.6341 5.98671 31.4056 6.8234 30.3753 7.87476L7.87525 30.3748C6.82389 31.4051 5.9872 32.6336 5.41358 33.9893C4.83996 35.345 4.54078 36.801 4.53335 38.2731C4.52591 39.7451 4.81037 41.204 5.37026 42.5655C5.93016 43.9269 6.75439 45.1638 7.7953 46.2047C8.83621 47.2456 10.0731 48.0699 11.4346 48.6298C12.796 49.1897 14.2549 49.4741 15.727 49.4667C17.199 49.4592 18.655 49.1601 20.0107 48.5864C21.3664 48.0128 22.5949 47.1761 23.6253 46.1248Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.125 19.125L34.875 34.875" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+    `,
+    spList: 'MSPranesimai',
+    description:
+      'Pranešimai apie neatitikimus maisto produktų kokybei, saugai, įskaitant maisto produktų, jų tiekėjų ar viešojo maitinimo įstaigų veiklą. Taip pat pranešimai apie nelegalią veiklą, susijusią su maisto produktų gamyba, platinimu ar pardavimu.',
+    authType: SurveyAuthType.OPTIONAL,
+    pages: [
+      // =======================================
+      pages.kontaktiniai(3),
+
+      // =======================================
+      {
+        ...pages.tema(),
+        questions: [
+          q.infocard(4, undefined, 'Pasirinkite dėl ko pranešate', {
+            required: true,
+            riskEvaluation: false,
+            options: [
+              os(
+                'Pranešimai apie gyvūnų gerovės pažeidimus',
+                5,
+                'Pranešimai apie gyvūnų gerovės pažeidimus',
+              ), // VSP1
+              os(
+                'Pranešimai apie gyvūnų augintinių veisimo ar prekybos pažeidimus ir/ar nelegalią veisimo ar prekybos veiklą',
+                5,
+                'Pranešimai apie gyvūnų augintinių veisimo ar prekybos pažeidimus ir/ar nelegalią veisimo ar prekybos veiklą',
+              ), // VSP2
+              os(
+                'Pranešimai dėl veterinarijos gydyklų veiklos ir/ar gydytojų paslaugų',
+                5,
+                'Pranešimai dėl veterinarijos gydyklų veiklos ir/ar gydytojų paslaugų',
+              ), // VSP3
+              os(
+                'Pranešimai apie kitos veterinarinės veiklos pažeidimus ir/ar nelegaliai vykdomą veiklą',
+                5,
+                'Pranešimai apie kitos veterinarinės veiklos pažeidimus ir/ar nelegaliai vykdomą veiklą',
+              ), // VSP4
+            ],
+            spField: 'pran_tema',
+          }),
+        ],
+      },
+      {
+        ...pages.tipas(),
+        questions: [
+          q.date(5, 6, 'Nurodykite pranešamo įvykio datą', {
+            required: true,
+          }),
+          q.multiselect(6, 7, 'Pasirinkite pranešamus pažeidimus', {
+            required: true,
+            options: [
+              // =========================
+              // VSP1
+              // =========================
+              os('Gyvūno žalojimas, keliantis grėsmę jo gyvybei arba gyvūno nužudymas', '7.5'), // 0
+              os(
+                'Gyvūno mušimas ar kiti smurtiniai veiksmai, keliantys grėsmę jo sveikatai, bet ne gyvybei',
+                '7.5',
+              ), // 1
+              os('Sąmoningas gyvūno išmetimas ar palikimas be priežiūros (beglobiu)', '7.5'), // 2
+              os(
+                'Netinkamos laikymo sąlygos (mažas narvas, netinkama aplinka, grandinė ir pan.)',
+                '7.5',
+              ), // 3
+              os('Laikymo sąlygos, keliančios grėsmę gyvūno sveikatai ar gyvybei', '7.5'), // 4
+              os('Gyvūnui nesuteikiama būtina veterinarinė pagalba', '7.5'), // 5
+              os('Gyvūnui neatlikta privaloma vakcinacija', '7.5'), // 6
+              os('Gyvūnas nėra tinkamai paženklintas ar registruotas', '7.5'), // 7
+              os('Gyvūnas nepakankamai šeriamas (maisto trūkumas, netinkamas maistas)', '7.5'), // 8
+              os('Gyvūnui nesuteikiamas prieinamumas prie švaraus vandens', '7.5'), // 9
+              os('Gyvūno keliamas triukšmas', '7.5'), // 10
+              os('Kiti pažeidimai', '7.5'), // 11
+
+              // =========================
+              // VSP2
+              // =========================
+              os(
+                'Gyvūnai laikomi netinkamomis sąlygomis (purvina, per ankšta, šalta ar karšta, nėra vandens ar pašaro)',
+                '7.6',
+              ), // 12
+              os('Gyvūnai atrodo sergantys, sužaloti ar išsekę', '7.6'), // 13
+              os('Gyvūnai parduodami neturint reikiamų dokumentų ar leidimų', '7.6'), // 14
+              os(
+                'Gyvūnai veisiami ar parduodami nelegaliai (be registracijos, be veterinarinės priežiūros)',
+                '7.6',
+              ), // 15
+              os('Gyvūnai parduodami per jauni (pvz., dar neatjunkę nuo motinos)', '7.6'), // 16
+              os(
+                'Parduodant pateikiama klaidinanti informacija apie veislę, kilmę ar sveikatos būklę',
+                '7.6',
+              ), // 17
+              os('Gyvūnams naudojami neleistini preparatai, vaistai ar kitos medžiagos', '7.6'), // 18
+              os(
+                'Gyvūnai laikomi netinkamoje vietoje (pvz., bute, sandėlyje ar automobilyje be leidimo)',
+                '7.6',
+              ), // 19
+              os(
+                'Prekyba vykdoma netinkamai (pvz., turgavietėje, socialiniuose tinkluose be registracijos)',
+                '7.6',
+              ), // 20
+              os('Gyvūnai importuojami ar eksportuojami be leidimų ar dokumentų', '7.6'), // 21
+              os('Asmuo turi neįprastai daug gyvūnų, galimai vykdo nelegalią veisyklą', '7.6'), // 22
+              os('Gyvūnai parduodami be identifikavimo (be mikroschemos, paso)', '7.6'), // 23
+              os(
+                'Gyvūnų laikymo ar veisimo vietoje skleidžiasi nemalonus kvapas, triukšmas ar kyla įtarimų dėl nepriežiūros',
+                '7.6',
+              ), // 24
+              os('Kiti pažeidimai', '7.6'), // 25
+
+              // =========================
+              // VSP3
+              // =========================
+              os('Veterinarijos gydykla veikia be leidimo ar neregistruota', 7), // 26
+              os('Gydykloje nesilaikoma švaros ar higienos reikalavimų', 7), // 27
+              os('Gyvūnai gydomi netinkamomis ar nesaugomis sąlygomis', 7), // 28
+              os('Gydykloje laikomi gyvūnai atrodo sužaloti, neprižiūrėti ar kenčiantys', 7), // 29
+              os('Naudojami neaiškios kilmės ar galimai pasibaigusio galiojimo vaistai', 7), // 30
+              os('Veterinarijos gydytojas elgiasi netinkamai ar žiauriai su gyvūnu', 7), // 31
+              os('Gyvūnui suteikta paslauga pakenkė jo sveikatai', 7), // 32
+              os('Gyvūnas nugaišo galimai dėl netinkamo gydymo ar priežiūros', 7), // 33
+              os('Nepateikiama informacija apie teikiamas paslaugas ar kainas', 7), // 34
+              os('Gyvūno savininkui nesuteikiama informacija apie diagnozę ar gydymą', 7), // 35
+              os('Gydymo metu paimti ar laikomi gyvūnai negrąžinami savininkui', 7), // 36
+              os('Įtarimas, kad gydykla verčiasi nelegalia prekyba vaistais ar gyvūnais', 7), // 37
+              os(
+                'Įtarimas, kad gydykla atlieka veiklą, kurios neturi teisės vykdyti (pvz., veisia ar prekiauja gyvūnais)',
+                7,
+              ), // 38
+              os(
+                'Skundas dėl veterinarijos gydytojo neprofesionalaus, nemandagaus ar neetiško elgesio',
+                7,
+              ), // 39
+              os('Kiti pažeidimai', 7), // 40
+
+              // =========================
+              // VSP4
+              // =========================
+              os('Veikla vykdoma be leidimo ar registracijos', 7), // 41
+              os(
+                'Veikla vykdoma ne toje vietoje ar ne tokiomis sąlygomis, kokioms suteiktas leidimas',
+                7,
+              ), // 42
+              os('Skerdimas atliekamas neturint teisės ar be veterinarinės priežiūros', 7), // 43
+              os(
+                'Gyvūnai transportuojami netinkamomis sąlygomis (be leidimo, be dokumentų, per ilgas transportavimas, netinkama transporto priemonė)',
+                7,
+              ), // 44
+              os(
+                'Gyvūnų surinkimo, laikymo ar gaišenų tvarkymo vietos neatitinka reikalavimų (duobės, aikštelės, konteineriai ir pan.)',
+                7,
+              ), // 45
+              os(
+                'Atliekama veikla, kuri gali užteršti aplinką ar kelti pavojų žmonių ar gyvūnų sveikatai (pvz., gaišenų, atliekų netinkamas tvarkymas)',
+                7,
+              ), // 46
+              os(
+                'Atliekama dezinfekcija, dezinsekcija ar deratizacija neturint leidimo arba naudojant neleistinas medžiagas',
+                7,
+              ), // 47
+              os(
+                'Medžioklės metu nesilaikoma veterinarinių reikalavimų (pvz., netinkamai apdorojamas ar tvarkomas sumedžiotas gyvūnas)',
+                7,
+              ), // 48
+              os(
+                'Skerdenos, kraujas ar kitos gyvūninės kilmės atliekos tvarkomos netinkamai ar neleistinose vietose',
+                7,
+              ), // 49
+              os(
+                'Atliekama veikla, kuri gali platinti ligas (pvz., gyvūnai judinami iš karantino teritorijos be leidimo)',
+                7,
+              ), // 50
+              os(
+                'Veikla vykdoma be tinkamos įrangos ar neatitinkančiose higienos reikalavimų patalpose',
+                7,
+              ), // 51
+              os(
+                'Neteikiami ar suklastoti duomenys VMVT ar kitoms institucijoms apie vykdomą veiklą',
+                7,
+              ), // 52
+              os('Kiti pažeidimai', 7), // 53
+            ],
+            spField: 'paz_tip3',
+            dynamicFields: [
+              // VSP1
+              ...dm(4, [0], {
+                options: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+              }),
+
+              // VSP2
+              ...dm(4, [1], {
+                options: [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
+              }),
+
+              // VSP3
+              ...dm(4, [2], {
+                options: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
+              }),
+
+              // VSP4
+              ...dm(4, [3], {
+                options: [41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53],
+              }),
+            ],
+          }),
+          q.text(7, 8, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
+            required: true,
+            dynamicFields: [
+              ...dm(4, [0, 1], {
+                condition: false,
+              }),
+            ],
+          }), //VKS3, VKS4
+          q.text('7.5', 9, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
+            required: true,
+            dynamicFields: [
+              ...dm(4, [1, 2, 3], {
+                condition: false,
+              }),
+            ],
+          }), //VKS1
+          q.text(
+            '7.6',
+            10,
+            'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes',
+            {
+              required: true,
+              dynamicFields: [
+                ...dm(4, [0, 2, 3], {
+                  condition: false,
+                }),
+              ],
+            },
+          ), //VKS2
+          q.select(
+            8,
+            undefined,
+            'Nurodykite apie kokį veterinarinės praktikos veiklos tipą pranešate',
+            {
+              required: true,
+              options: [
+                // VSP3
+                os('Veterinarijos gydykla / klinika (įmonė)', 19),
+                os('Veterinarijos kabinetas (įmonė)', 19),
+                os('Privatus veterinarijos gydytojas', 19),
+                os('Mobilus veterinarijos gydytojas (paslaugos pagal iškvietimą)', 19),
+                os('Veterinarijos paramedikas', 19),
+                os('Kita veterinarinės praktikos veikla', 19),
+
+                // VSP4
+                os('Gyvūnų veisimas, laikymas, prekyba ir priežiūra.', 22),
+                os('Gyvūnų prieglaudų, globos įstaigų, viešbučių, dresūros mokyklų veikla.', 22),
+                os('Gyvūnų surinkimo, karantino ir laikymo vietų veikla.', 22),
+                os('Gyvūnų vežėjų veikla (1 tipo ir 2 tipo leidimai).', 22),
+                os('Veterinarinės praktikos veikla (veterinarijos gydytojų ir įmonių).', 22),
+                os(
+                  'Gyvūninių šalutinių produktų surinkimas, laikymas, perdirbimas, kompostavimas, deginimas.',
+                  22,
+                ),
+                os('Akvakultūros ir žuvininkystės ūkių veikla (veisimas, auginimas, prekyba).', 22),
+                os('Gaišenų surinkimo ir laikymo aikštelių veikla.', 22),
+                os('Gyvūnų karantino ir izoliavimo vietų veikla.', 22),
+                os('Mobilių skerdyklų veikla.', 22),
+                os('Laukinių gyvūnų apdorojimo vietų (medžiotojų punktų) veikla.', 22),
+              ],
+              dynamicFields: [
+                ...dm(4, [0, 1], {
+                  condition: false,
+                }),
+                ...dm(4, [2], {
+                  options: [0, 1, 2, 3, 4, 5],
+                }),
+                ...dm(4, [3], {
+                  options: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+                }),
+              ],
+            },
+          ),
+        ],
+      },
+      {
+        ...pages.detales(),
+        questions: [
+          q.multiselect(9, 10, 'Nurodykite apie kokio tipo gyvūnus pranešate', {
+            required: true,
+            options: o([
+              //VSP1
+              'Gyvūnas augintinis',
+              'Ūkinis gyvūnas',
+              'Laukinis gyvūnas',
+            ]),
+            dynamicFields: [
+              ...dm(4, [1, 2, 3], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.multiselect(
+            10,
+            undefined,
+            'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
+            {
+              required: true,
+              options: [
+                os('Šuo', 12),
+                os('Katė', 12),
+                os('Šeškas', 12),
+                os('Galvijas', 12),
+                os('Ožka', 12),
+                os('Kiaulė', 12),
+                os('Pauštis', 12),
+                os('Arklys', 12),
+                os('Šernas', 12),
+                os('Stirna', 12),
+                os('Paukštis', 12),
+                os('Briedis', 12),
+                os('Lapė', 12),
+                os('Kita', 11),
+              ],
+              dynamicFields: [
+                ...dm(4, [2, 3], {
+                  condition: false,
+                }),
+                ...dm(4, [0], {
+                  options: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                }),
+                ...dm(4, [1], {
+                  options: [0, 1, 2, 13],
+                }),
+              ],
+            },
+          ),
+          q.input(11, 12, 'Nurodykite gyvūnų apie kuriuos pranešate, pavadinimus', {
+            required: true,
+            condition: c(10),
+          }),
+        ],
+        dynamicFields: [
+          ...dm(4, [2, 3], {
+            condition: false,
+          }),
+        ],
+      },
+      {
+        ...pages.vieta(),
+        questions: [
+          // ==== VSP1 VSP2 ====
+          q.radio(12, undefined, 'Nurodykite kur pastebėjote pranešamus pažeidimus', {
+            options: [os('Fizinė gyvūnų laikymo vieta', 13), os('Internetinė erdvė', 16)],
+            required: true,
+          }),
+          q.radio(13, undefined, 'Ar galite nurodyti tikslų gyvūno laikymo vietos adresą?', {
+            options: [os('Taip', 14), os('Ne', 15)],
+            required: true,
+            condition: [
+              {
+                question: 12,
+                valueIndex: 0,
+              },
+            ],
+          }),
+          q.address(14, 15, 'Nurodykite tikslų gyvūnų laikymo vietos adresą', {
+            required: true,
+            condition: [
+              {
+                question: 12,
+                valueIndex: 0,
+              },
+              {
+                question: 13,
+                valueIndex: 0,
+              },
+            ],
+          }),
+          q.input(15, 17, 'Nurodykite gyvūnų laikymo vietos koordinates', {
+            required: true,
+            condition: [
+              {
+                question: 12,
+                valueIndex: 0,
+              },
+              {
+                question: 13,
+                valueIndex: 1,
+              },
+            ],
+          }),
+          q.input(16, 17, 'Nurodykite internetinio puslapio kuriame pastebėti pažeidimai nuorodą', {
+            required: true,
+            condition: [
+              {
+                question: 12,
+                valueIndex: 1,
+              },
+            ],
+          }),
+          q.input(17, 18, 'Nurodykite visą žinomą informaciją apie gyvūno laikytojus', {
+            required: true,
+          }),
+          q.text(
+            18,
+            29,
+            'Nurodykite  visą žinomą papildomą informaciją apie įvykio vietą, nuo darbo valandų iki patekimo į patalpas informacijos ar bet kokią kitą informaciją padedančią mums surasti pranešamus pažeidimus',
+            {
+              required: false,
+            },
+          ),
+        ],
+        dynamicFields: [
+          ...dm(4, [2, 3], {
+            condition: false,
+          }),
+        ],
+      },
+      // ==== VSP3 ====
+      {
+        ...pages.vieta(),
+        questions: [
+          q.address(19, 20, 'Nurodykite adresą kuriuo vykdoma veterinarijos praktikos veikla', {
+            required: true,
+          }),
+          q.input(
+            20,
+            21,
+            'Nurodykite pranešamo veterinarijos gydytojo vardą ir pavardę ar veterinarijos praktikos vykdymo vietos pavadinimą',
+            {
+              required: true,
+            },
+          ),
+          q.text(
+            21,
+            29,
+            'Nurodykite  visą žinomą papildomą informaciją apie įvykio vietą, nuo darbo valandų iki patekimo į patalpas informacijos ar bet kokią kitą informaciją padedančią mums surasti pranešamus pažeidimus',
+            {
+              required: false,
+            },
+          ),
+        ],
+        dynamicFields: [
+          ...dm(4, [0, 1, 3], {
+            condition: false,
+          }),
+        ],
+      },
+      // ==== VSP4 ====
+      {
+        ...pages.vieta(),
+        questions: [
+          q.radio(22, undefined, 'Ar galite nurodyti tikslų veiklos vykdymo vietos adresą?', {
+            options: [os('Taip', 23), os('Ne', 24)],
+            required: true,
+          }),
+          q.address(23, 25, 'Nurodykite adresą kuriuo vykdoma veterinarijos praktikos veikla', {
+            required: true,
+            condition: [
+              {
+                question: 22,
+                valueIndex: 0,
+              },
+            ],
+          }),
+          q.input(24, 25, 'Nurodykite veiklos vykdymo vietos koordinates', {
+            required: true,
+            condition: [
+              {
+                question: 22,
+                valueIndex: 1,
+              },
+            ],
+          }),
+          q.input(
+            25,
+            26,
+            'Jei pranešami pažeidimai vykdomi su transporto priemone nurodykite jos valstybinius numerius',
+            {
+              required: false,
+            },
+          ),
+          q.input(26, 27, 'Nurodykite veiklos vietos pavadinimą', {
+            required: false,
+          }),
+          q.text(27, 28, 'Nurodykite veiklą vykdančių fizinius ar juridinius asmenis', {
+            required: false,
+          }),
+          q.text(
+            28,
+            29,
+            'Nurodykite  visą žinomą papildomą informaciją apie įvykio vietą, nuo darbo valandų iki patekimo į patalpas informacijos ar bet kokią kitą informaciją padedančią mums surasti pranešamus pažeidimus',
+            {
+              required: false,
+            },
+          ),
+        ],
+        dynamicFields: [
+          ...dm(4, [0, 1, 2], {
+            condition: false,
+          }),
+        ],
+      },
+
+      // == dokumentai ==
+      {
+        title: 'Vaizdinė medžiaga ir kiti dokumentai',
+        description:
+          'Pridėkite vaizdinę medžiagą (nuotraukas, video) arba kitus dokumentus įrodančius pateikiamus pažeidimus',
+        questions: [
+          q.files(
+            29,
+            30,
+            'Jei galite pridėkite nuotraukas ar kitus dokumentus kuriuose atsispindėtu pranešami pažeidimai',
+            {
+              required: false,
+            },
+          ),
+          q.files(30, 31, 'Jei galite pridėkite kitus su pranešamu įvykiu susijusius įrodymus', {
+            required: false,
+          }),
+        ],
+      },
+
+      pages.teises(31),
+
+      // =======================================
+    ],
+  },
+  //   {
+  //     title: ' srities pranešimai',
+  //     icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+  // <path d="M23.6253 46.1248L46.1253 23.6248C47.1766 22.5944 48.0133 21.3659 48.5869 20.0102C49.1605 18.6545 49.4597 17.1985 49.4672 15.7265C49.4746 14.2544 49.1901 12.7955 48.6302 11.4341C48.0703 10.0726 47.2461 8.83572 46.2052 7.79481C45.1643 6.75391 43.9274 5.92967 42.5659 5.36978C41.2045 4.80988 39.7456 4.52542 38.2736 4.53286C36.8015 4.54029 35.3455 4.83947 33.9898 5.41309C32.6341 5.98671 31.4056 6.8234 30.3753 7.87476L7.87525 30.3748C6.82389 31.4051 5.9872 32.6336 5.41358 33.9893C4.83996 35.345 4.54078 36.801 4.53335 38.2731C4.52591 39.7451 4.81037 41.204 5.37026 42.5655C5.93016 43.9269 6.75439 45.1638 7.7953 46.2047C8.83621 47.2456 10.0731 48.0699 11.4346 48.6298C12.796 49.1897 14.2549 49.4741 15.727 49.4667C17.199 49.4592 18.655 49.1601 20.0107 48.5864C21.3664 48.0128 22.5949 47.1761 23.6253 46.1248Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  // <path d="M19.125 19.125L34.875 34.875" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  // </svg>
+  //     `,
+  //     spList: 'MSPranesimai',
+  //     description:
+  //       'Pranešimai apie neatitikimus maisto produktų kokybei, saugai, įskaitant maisto produktų, jų tiekėjų ar viešojo maitinimo įstaigų veiklą. Taip pat pranešimai apie nelegalią veiklą, susijusią su maisto produktų gamyba, platinimu ar pardavimu.',
+  //     authType: SurveyAuthType.OPTIONAL,
+  //     pages: [
+  //       // =======================================
+  //       pages.kontaktiniai(3),
+
+  //       // =======================================
+  //       {
+  //         ...pages.tema(),
+  //         questions: [
+  //           q.infocard(4, undefined, 'Pasirinkite dėl ko pranešate', {
+  //             required: true,
+  //             riskEvaluation: false,
+  //             options: [
+  //               os(
+  //                 'Pranešimai apie gyvūnų gerovės pažeidimus',
+  //                 9,
+  //                 'Pranešimai apie gyvūnų gerovės pažeidimus',
+  //               ), // VSP1
+  //               os(
+  //                 'Pranešimai apie gyvūnų augintinių veisimo ar prekybos pažeidimus ir/ar nelegalią veisimo ar prekybos veiklą',
+  //                 5,
+  //                 'Pranešimai apie gyvūnų augintinių veisimo ar prekybos pažeidimus ir/ar nelegalią veisimo ar prekybos veiklą',
+  //               ), // VSP2
+  //               os(
+  //                 'Pranešimai dėl veterinarijos gydyklų veiklos ir/ar gydytojų paslaugų',
+  //                 5,
+  //                 'Pranešimai dėl veterinarijos gydyklų veiklos ir/ar gydytojų paslaugų',
+  //               ), // VSP3
+  //               os(
+  //                 'Pranešimai apie kitos veterinarinės veiklos pažeidimus ir/ar nelegaliai vykdomą veiklą',
+  //                 5,
+  //                 'Pranešimai apie kitos veterinarinės veiklos pažeidimus ir/ar nelegaliai vykdomą veiklą',
+  //               ), // VSP4
+  //             ],
+  //             spField: 'pran_tema',
+  //           }),
+  //         ],
+  //       },
+  //       {
+  //         ...pages.tipas(),
+  //         questions: [
+  //           q.date(5, 10, 'Nurodykite pranešamo įvykio datą', {
+  //             required: true,
+  //           }),
+  //         ],
+  //         dynamicFields: [
+  //           ...dm(4, [1, 2, 3], {
+  //             condition: false,
+  //           }),
+  //         ],
+  //       },
+  //       {
+  //         ...pages.detales(),
+  //         questions: [
+  //           q.multiselect(9, 10, 'Nurodykite apie kokio tipo gyvūnus pranešate', {
+  //             required: true,
+  //             options: o([
+  //               //VSP1
+  //               'Gyvūnas augintinis',
+  //               'Ūkinis gyvūnas',
+  //               'Laukinis gyvūnas',
+  //             ]),
+  //           }),
+  //         ],
+  //         dynamicFields: [
+  //           ...dm(4, [0], {
+  //             condition: false,
+  //           }),
+  //         ],
+  //       },
+  //       {
+  //         ...pages.vieta(),
+  //         questions: [
+  //           q.input(10, undefined, 'vieta', {
+  //             required: true,
+  //           }),
+  //         ],
+  //       },
+
+  //       // =======================================
+  //     ],
+  //   },
 ];
 
 @Service({
