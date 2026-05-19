@@ -144,7 +144,7 @@ const os = (
 const helperVeiklos = (id: number | string, idOut: number | string, qa: QuestionExtends = {}) => [
   q.radio(id, undefined, 'Nurodykite prekybos būdą', {
     options: [os('Fizinėje prekybos vietoje', `${id}.1`), os('Internetu', `${id}.2`)],
-    spField: 'PrekybosBudas',
+    spField: 'prekybos_budas',
     ...qa,
   }),
   q.location(`${id}.1`, idOut, 'Žemėlapyje nurodykite pardavimo vietą', {
@@ -544,7 +544,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.select(66, 70, 'Nurodykite apie kokio tipo veiklos pažeidimus pranešate', {
             //MSP3
             required: true,
-            spField: 'pazeid',
+            spField: 'veik_tip',
             options: o([
               'Gyvūninio maisto tvarkymo veikla',
               'Ikimokyklinio, mokyklinio ugdymo įstaigų maitinimo veikla (tyrimui visada)',
@@ -1308,11 +1308,12 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.radio(41, undefined, 'Kur įsigytas produktas ar patiekalas?', {
             riskEvaluation: false,
             required: true,
-            spField: 'gavimo_vieta',
+            spField: 'prekyb_vieta',
             options: [
               os('Fizinėje prekybos vietoje', 42),
               os('Internetu', 47),
               os('Organizuotame renginyje', 84),
+              os('Socialiniais tinklais', 47),
             ],
             dynamicFields: [
               ...dm(4, [4], {
@@ -1321,26 +1322,26 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               }),
               ...dm(4, [0], {
                 //MSP1
-                options: [0, 1],
+                options: [0, 1, 3],
               }),
               ...dm(4, [1], {
                 //MSP2
-                options: [0, 1, 2],
+                options: [0, 1, 2, 3],
               }),
               ...dm(4, [2], {
                 //MSP3
-                options: [0, 1],
+                options: [0, 1, 3],
               }),
               ...dm(4, [3], {
                 //MSP4
-                options: [0, 1],
+                options: [0, 1, 3],
               }),
             ],
           }),
           q.address(42, 48, 'Nurodykite veiklos vietos adresą', {
             riskEvaluation: false,
             required: true,
-            spField: 'ar_address',
+            spField: 'adresas',
             condition: [
               {
                 question: 41,
@@ -1433,7 +1434,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             51,
             'Jei galite, nurodykyte fizinius ar juridinius asmenis vykdančius prekybos veiklą',
             {
-              spField: 'pap_adr_info',
+              spField: 'veik_asm',
               required: false,
               dynamicFields: [
                 ...dm(4, [4], {
@@ -1447,7 +1448,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.address(78, 82, 'Nurodykite veiklos vietos adresą', {
             riskEvaluation: false,
             required: true,
-            spField: 'ar_address',
+            spField: 'adresas',
             dynamicFields: [
               ...dm(4, [0, 1, 2, 3], {
                 condition: false,
@@ -1500,16 +1501,19 @@ const SURVEYS_SEED: SurveyTemplate[] = [
       pages.teises(56),
     ],
   },
+  // SURVEY 2
   {
     title: 'Veterinarinės srities pranešimai',
     icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M23.6253 46.1248L46.1253 23.6248C47.1766 22.5944 48.0133 21.3659 48.5869 20.0102C49.1605 18.6545 49.4597 17.1985 49.4672 15.7265C49.4746 14.2544 49.1901 12.7955 48.6302 11.4341C48.0703 10.0726 47.2461 8.83572 46.2052 7.79481C45.1643 6.75391 43.9274 5.92967 42.5659 5.36978C41.2045 4.80988 39.7456 4.52542 38.2736 4.53286C36.8015 4.54029 35.3455 4.83947 33.9898 5.41309C32.6341 5.98671 31.4056 6.8234 30.3753 7.87476L7.87525 30.3748C6.82389 31.4051 5.9872 32.6336 5.41358 33.9893C4.83996 35.345 4.54078 36.801 4.53335 38.2731C4.52591 39.7451 4.81037 41.204 5.37026 42.5655C5.93016 43.9269 6.75439 45.1638 7.7953 46.2047C8.83621 47.2456 10.0731 48.0699 11.4346 48.6298C12.796 49.1897 14.2549 49.4741 15.727 49.4667C17.199 49.4592 18.655 49.1601 20.0107 48.5864C21.3664 48.0128 22.5949 47.1761 23.6253 46.1248Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M19.125 19.125L34.875 34.875" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-    `,
+  <path d="M25.084 13.5C27.5693 13.5 29.584 11.4853 29.584 9C29.584 6.51472 27.5693 4.5 25.084 4.5C22.5987 4.5 20.584 6.51472 20.584 9C20.584 11.4853 22.5987 13.5 25.084 13.5Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40.834 22.5C43.3193 22.5 45.334 20.4853 45.334 18C45.334 15.5147 43.3193 13.5 40.834 13.5C38.3487 13.5 36.334 15.5147 36.334 18C36.334 20.4853 38.3487 22.5 40.834 22.5Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M45.334 40.5C47.8193 40.5 49.834 38.4853 49.834 36C49.834 33.5147 47.8193 31.5 45.334 31.5C42.8487 31.5 40.834 33.5147 40.834 36C40.834 38.4853 42.8487 40.5 45.334 40.5Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20.5839 22.5C22.0613 22.5 23.5242 22.791 24.8891 23.3564C26.254 23.9217 27.4942 24.7504 28.5389 25.795C29.5835 26.8397 30.4122 28.0799 30.9776 29.4448C31.5429 30.8097 31.8339 32.2726 31.8339 33.75V41.625C31.8333 43.507 31.1587 45.3266 29.9323 46.7542C28.7058 48.1818 27.0087 49.1229 25.1482 49.4071C23.2878 49.6914 21.3871 49.2999 19.7903 48.3036C18.1936 47.3074 17.0064 45.7723 16.4439 43.9763C15.4839 40.8788 13.4589 38.85 10.3689 37.89C8.57382 37.3278 7.03928 36.1415 6.04297 34.546C5.04666 32.9504 4.65439 31.0509 4.93715 29.1912C5.21992 27.3315 6.15903 25.6345 7.58455 24.4071C9.01007 23.1798 10.8278 22.5033 12.7089 22.5H20.5839Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`,
     spList: 'MSPranesimai',
     description:
-      'Pranešimai apie neatitikimus maisto produktų kokybei, saugai, įskaitant maisto produktų, jų tiekėjų ar viešojo maitinimo įstaigų veiklą. Taip pat pranešimai apie nelegalią veiklą, susijusią su maisto produktų gamyba, platinimu ar pardavimu.',
+      'Pranešimai apie pašarus ir veterinarinius vaistus, jų kokybės, saugos, ženklinimo ir kitus pažeidimus, nelegalią šių produktų gamybą, tiekimą. Pranešimai apie pašarų ir veterinarinės farmacijos ūkio subjektų veiklos pažeidimus.',
+
     authType: SurveyAuthType.OPTIONAL,
     pages: [
       // =======================================
@@ -1553,6 +1557,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
         questions: [
           q.date(5, 6, 'Nurodykite pranešamo įvykio datą', {
             required: true,
+            spField: 'ivyk_data',
           }),
           q.multiselect(6, 7, 'Pasirinkite pranešamus pažeidimus', {
             required: true,
@@ -1712,6 +1717,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           }),
           q.text(7, 8, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
             required: true,
+            spField: 'aplink',
             dynamicFields: [
               ...dm(4, [0, 1], {
                 condition: false,
@@ -1720,6 +1726,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           }), //VKS3, VKS4
           q.text('7.5', 9, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
             required: true,
+            spField: 'aplink',
             dynamicFields: [
               ...dm(4, [1, 2, 3], {
                 condition: false,
@@ -1732,6 +1739,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes',
             {
               required: true,
+              spField: 'aplink',
               dynamicFields: [
                 ...dm(4, [0, 2, 3], {
                   condition: false,
@@ -1745,6 +1753,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite apie kokį veterinarinės praktikos veiklos tipą pranešate',
             {
               required: true,
+              spField: 'veik_tip',
               options: [
                 // VSP3
                 os('Veterinarijos gydykla / klinika (įmonė)', 19),
@@ -1790,6 +1799,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
         questions: [
           q.multiselect(9, 10, 'Nurodykite apie kokio tipo gyvūnus pranešate', {
             required: true,
+            spField: 'gyv_tip',
             options: o([
               //VSP1
               'Gyvūnas augintinis',
@@ -1808,6 +1818,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
             {
               required: true,
+              spField: 'gyv_rus',
               options: [
                 os('Šuo', 12),
                 os('Katė', 12),
@@ -1840,6 +1851,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.input(11, 12, 'Nurodykite gyvūnų apie kuriuos pranešate, pavadinimus', {
             required: true,
             condition: c(10),
+            spField: 'gyv_rus_kita',
           }),
         ],
         dynamicFields: [
@@ -1853,8 +1865,13 @@ const SURVEYS_SEED: SurveyTemplate[] = [
         questions: [
           // ==== VSP1 VSP2 ====
           q.radio(12, undefined, 'Nurodykite kur pastebėjote pranešamus pažeidimus', {
-            options: [os('Fizinė gyvūnų laikymo vieta', 13), os('Internetinė erdvė', 16)],
+            options: [
+              os('Fizinė gyvūnų laikymo vieta', 13),
+              os('Internetinė erdvė', 16),
+              os('Socialiniai tinklai', 34),
+            ],
             required: true,
+            spField: 'prekyb_vieta',
           }),
           q.radio(13, undefined, 'Ar galite nurodyti tikslų gyvūno laikymo vietos adresą?', {
             options: [os('Taip', 14), os('Ne', 15)],
@@ -1868,6 +1885,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           }),
           q.address(14, 15, 'Nurodykite tikslų gyvūnų laikymo vietos adresą', {
             required: true,
+            spField: 'adresas',
             condition: [
               {
                 question: 12,
@@ -1880,6 +1898,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.input(15, 17, 'Nurodykite gyvūnų laikymo vietos koordinates', {
+            spField: 'koord',
             required: true,
             condition: [
               {
@@ -1892,8 +1911,19 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               },
             ],
           }),
+          q.input(34, 17, 'Nurodykite socialinių tinklų nuorodą', {
+            required: true,
+            spField: 'psl_adresas',
+            condition: [
+              {
+                question: 12,
+                valueIndex: 2,
+              },
+            ],
+          }),
           q.input(16, 17, 'Nurodykite internetinio puslapio kuriame pastebėti pažeidimai nuorodą', {
             required: true,
+            spField: 'psl_adresas',
             condition: [
               {
                 question: 12,
@@ -1902,6 +1932,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.input(17, 18, 'Nurodykite visą žinomą informaciją apie gyvūno laikytojus', {
+            spField: 'pap_adr_info',
             required: true,
           }),
           q.text(
@@ -1910,6 +1941,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite  visą žinomą papildomą informaciją apie įvykio vietą, nuo darbo valandų iki patekimo į patalpas informacijos ar bet kokią kitą informaciją padedančią mums surasti pranešamus pažeidimus',
             {
               required: false,
+              spField: 'patek',
             },
           ),
         ],
@@ -1925,6 +1957,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
         questions: [
           q.address(19, 20, 'Nurodykite adresą kuriuo vykdoma veterinarijos praktikos veikla', {
             required: true,
+            spField: 'adresas',
           }),
           q.input(
             20,
@@ -1932,6 +1965,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite pranešamo veterinarijos gydytojo vardą ir pavardę ar veterinarijos praktikos vykdymo vietos pavadinimą',
             {
               required: true,
+              spField: 'pap_adr_info',
             },
           ),
           q.text(
@@ -1940,6 +1974,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite  visą žinomą papildomą informaciją apie įvykio vietą, nuo darbo valandų iki patekimo į patalpas informacijos ar bet kokią kitą informaciją padedančią mums surasti pranešamus pažeidimus',
             {
               required: false,
+              spField: 'patek',
             },
           ),
         ],
@@ -1958,6 +1993,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             required: true,
           }),
           q.address(23, 25, 'Nurodykite adresą kuriuo vykdoma veterinarijos praktikos veikla', {
+            spField: 'adresas',
             required: true,
             condition: [
               {
@@ -1967,6 +2003,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.input(24, 25, 'Nurodykite veiklos vykdymo vietos koordinates', {
+            spField: 'koord',
             required: true,
             condition: [
               {
@@ -1980,13 +2017,16 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             26,
             'Jei pranešami pažeidimai vykdomi su transporto priemone nurodykite jos valstybinius numerius',
             {
+              spField: 'pap_info',
               required: false,
             },
           ),
           q.input(26, 27, 'Nurodykite veiklos vietos pavadinimą', {
+            spField: 'veik_pav',
             required: false,
           }),
           q.text(27, 28, 'Nurodykite veiklą vykdančių fizinius ar juridinius asmenis', {
+            spField: 'veik_asm',
             required: false,
           }),
           q.text(
@@ -1994,6 +2034,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             29,
             'Nurodykite  visą žinomą papildomą informaciją apie įvykio vietą, nuo darbo valandų iki patekimo į patalpas informacijos ar bet kokią kitą informaciją padedančią mums surasti pranešamus pažeidimus',
             {
+              spField: 'patek',
               required: false,
             },
           ),
@@ -2017,10 +2058,12 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Jei galite pridėkite nuotraukas ar kitus dokumentus kuriuose atsispindėtu pranešami pažeidimai',
             {
               required: false,
+              spField: 'files',
             },
           ),
           q.files(30, 31, 'Jei galite pridėkite kitus su pranešamu įvykiu susijusius įrodymus', {
             required: false,
+            spField: 'files_kiti',
           }),
         ],
       },
@@ -2030,98 +2073,337 @@ const SURVEYS_SEED: SurveyTemplate[] = [
       // =======================================
     ],
   },
-  //   {
-  //     title: ' srities pranešimai',
-  //     icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  // <path d="M23.6253 46.1248L46.1253 23.6248C47.1766 22.5944 48.0133 21.3659 48.5869 20.0102C49.1605 18.6545 49.4597 17.1985 49.4672 15.7265C49.4746 14.2544 49.1901 12.7955 48.6302 11.4341C48.0703 10.0726 47.2461 8.83572 46.2052 7.79481C45.1643 6.75391 43.9274 5.92967 42.5659 5.36978C41.2045 4.80988 39.7456 4.52542 38.2736 4.53286C36.8015 4.54029 35.3455 4.83947 33.9898 5.41309C32.6341 5.98671 31.4056 6.8234 30.3753 7.87476L7.87525 30.3748C6.82389 31.4051 5.9872 32.6336 5.41358 33.9893C4.83996 35.345 4.54078 36.801 4.53335 38.2731C4.52591 39.7451 4.81037 41.204 5.37026 42.5655C5.93016 43.9269 6.75439 45.1638 7.7953 46.2047C8.83621 47.2456 10.0731 48.0699 11.4346 48.6298C12.796 49.1897 14.2549 49.4741 15.727 49.4667C17.199 49.4592 18.655 49.1601 20.0107 48.5864C21.3664 48.0128 22.5949 47.1761 23.6253 46.1248Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // <path d="M19.125 19.125L34.875 34.875" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  // </svg>
-  //     `,
-  //     spList: 'MSPranesimai',
-  //     description:
-  //       'Pranešimai apie neatitikimus maisto produktų kokybei, saugai, įskaitant maisto produktų, jų tiekėjų ar viešojo maitinimo įstaigų veiklą. Taip pat pranešimai apie nelegalią veiklą, susijusią su maisto produktų gamyba, platinimu ar pardavimu.',
-  //     authType: SurveyAuthType.OPTIONAL,
-  //     pages: [
-  //       // =======================================
-  //       pages.kontaktiniai(3),
+  // SURVEY 3
+  {
+    title: 'Veterinarinių vaistų ir pašarų pranešimai',
+    icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M23.6253 46.1248L46.1253 23.6248C47.1766 22.5944 48.0133 21.3659 48.5869 20.0102C49.1605 18.6545 49.4597 17.1985 49.4672 15.7265C49.4746 14.2544 49.1901 12.7955 48.6302 11.4341C48.0703 10.0726 47.2461 8.83572 46.2052 7.79481C45.1643 6.75391 43.9274 5.92967 42.5659 5.36978C41.2045 4.80988 39.7456 4.52542 38.2736 4.53286C36.8015 4.54029 35.3455 4.83947 33.9898 5.41309C32.6341 5.98671 31.4056 6.8234 30.3753 7.87476L7.87525 30.3748C6.82389 31.4051 5.9872 32.6336 5.41358 33.9893C4.83996 35.345 4.54078 36.801 4.53335 38.2731C4.52591 39.7451 4.81037 41.204 5.37026 42.5655C5.93016 43.9269 6.75439 45.1638 7.7953 46.2047C8.83621 47.2456 10.0731 48.0699 11.4346 48.6298C12.796 49.1897 14.2549 49.4741 15.727 49.4667C17.199 49.4592 18.655 49.1601 20.0107 48.5864C21.3664 48.0128 22.5949 47.1761 23.6253 46.1248Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.125 19.125L34.875 34.875" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+    `,
+    spList: 'MSPranesimai',
+    description:
+      'Pranešimai apie pašarus ir veterinarinius vaistus, jų kokybės, saugos, ženklinimo ir kitus pažeidimus, nelegalią šių produktų gamybą, tiekimą. Pranešimai apie pašarų ir veterinarinės farmacijos ūkio subjektų veiklos pažeidimus.',
+    authType: SurveyAuthType.OPTIONAL,
+    pages: [
+      // =======================================
+      pages.kontaktiniai(3),
 
-  //       // =======================================
-  //       {
-  //         ...pages.tema(),
-  //         questions: [
-  //           q.infocard(4, undefined, 'Pasirinkite dėl ko pranešate', {
-  //             required: true,
-  //             riskEvaluation: false,
-  //             options: [
-  //               os(
-  //                 'Pranešimai apie gyvūnų gerovės pažeidimus',
-  //                 9,
-  //                 'Pranešimai apie gyvūnų gerovės pažeidimus',
-  //               ), // VSP1
-  //               os(
-  //                 'Pranešimai apie gyvūnų augintinių veisimo ar prekybos pažeidimus ir/ar nelegalią veisimo ar prekybos veiklą',
-  //                 5,
-  //                 'Pranešimai apie gyvūnų augintinių veisimo ar prekybos pažeidimus ir/ar nelegalią veisimo ar prekybos veiklą',
-  //               ), // VSP2
-  //               os(
-  //                 'Pranešimai dėl veterinarijos gydyklų veiklos ir/ar gydytojų paslaugų',
-  //                 5,
-  //                 'Pranešimai dėl veterinarijos gydyklų veiklos ir/ar gydytojų paslaugų',
-  //               ), // VSP3
-  //               os(
-  //                 'Pranešimai apie kitos veterinarinės veiklos pažeidimus ir/ar nelegaliai vykdomą veiklą',
-  //                 5,
-  //                 'Pranešimai apie kitos veterinarinės veiklos pažeidimus ir/ar nelegaliai vykdomą veiklą',
-  //               ), // VSP4
-  //             ],
-  //             spField: 'pran_tema',
-  //           }),
-  //         ],
-  //       },
-  //       {
-  //         ...pages.tipas(),
-  //         questions: [
-  //           q.date(5, 10, 'Nurodykite pranešamo įvykio datą', {
-  //             required: true,
-  //           }),
-  //         ],
-  //         dynamicFields: [
-  //           ...dm(4, [1, 2, 3], {
-  //             condition: false,
-  //           }),
-  //         ],
-  //       },
-  //       {
-  //         ...pages.detales(),
-  //         questions: [
-  //           q.multiselect(9, 10, 'Nurodykite apie kokio tipo gyvūnus pranešate', {
-  //             required: true,
-  //             options: o([
-  //               //VSP1
-  //               'Gyvūnas augintinis',
-  //               'Ūkinis gyvūnas',
-  //               'Laukinis gyvūnas',
-  //             ]),
-  //           }),
-  //         ],
-  //         dynamicFields: [
-  //           ...dm(4, [0], {
-  //             condition: false,
-  //           }),
-  //         ],
-  //       },
-  //       {
-  //         ...pages.vieta(),
-  //         questions: [
-  //           q.input(10, undefined, 'vieta', {
-  //             required: true,
-  //           }),
-  //         ],
-  //       },
+      // =======================================
+      {
+        ...pages.tema(),
+        questions: [
+          q.infocard(4, undefined, 'Pasirinkite dėl ko pranešate', {
+            required: true,
+            riskEvaluation: false,
+            options: [
+              os(
+                'Pranešimai apie veterinarinių vaistų ar pašarų pažeidimus',
+                '5.5',
+                'Pranešimai apie veterinarinių vaistų ar pašarų pažeidimus (VVP1)',
+              ), // VVP1
+              os(
+                'Pranešimai apie veterinarinių vaistų ar pašarų veiklos pažeidimus',
+                5,
+                'Pranešimai apie veterinarinių vaistų ar pašarų veiklos pažeidimus (VVP2)',
+              ), // VVP2
+            ],
+            spField: 'pran_tema',
+          }),
+        ],
+      },
+      {
+        ...pages.tipas(),
+        questions: [
+          q.date(5, 6, 'Nurodykite pranešamo įvykio datą', {
+            required: true,
+            spField: 'ivyk_data',
+          }),
+          q.date('5.5', 8, 'Nurodykite pranešamo įvykio datą', {
+            required: true,
+            spField: 'ivyk_data',
+          }),
+          q.multiselect(6, 7, 'Nurodykite apie kokio tipo veiklos pažeidimus pranešate', {
+            required: true,
+            options: o([
+              'Veterinarinių vaistų gamyba',
+              'Veterinarinių vaistų didmeninis platinimas',
+              'Veterinarinių vaistų mažmeninė prekyba ne vaistinėse',
+              'Veterinarinių vaistų prekyba internetu',
+              'Pašarų gamyba',
+              'Pašarinių priedų gamyba',
+              'Pašarų didmeninė prekyba',
+              'Pašarų mažmeninė prekyba',
+              'Pašarų importas',
+              'Pašarų eksportas',
+              'Pašarų sandėliavimas',
+              'Pašarų transportavimas',
+              'Pašarų maišymas ūkiuose',
+              'Pašarų teikimas rinkai internetu',
+            ]),
+            spField: 'veik_tip',
+            dynamicFields: [
+              ...dm(4, [0], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.multiselect(7, 9, 'Pasirinkite pranešamus pažeidimus', {
+            required: true,
+            options: o([
+              'Nenurodoma prekiaujamų produktų informacija',
+              'Prekiaujama neleistinais produktais ar produktais su neleistinomis sudėtinėmis dalimis',
+              'Produktai užteršti cheminiais, fiziniais, mikrobiniais ar kitokiais teršalais',
+              'Veikla vykdoma be leidimų/registracijos',
+              'Veiklos patalpos nehigieniškos, netvarkingos',
+              'Veikloje naudojami produktai su pasibaigusiais tinkamumo vartoti terminais',
+              'Personalas nesilaiko higienos normų',
+              'Veikloje maisto produktai laikomi netinkamomis sąlygomis',
+              'Vykdoma maisto klastojimo veikla',
+              'Veikla vykdoma nesilaikant savikontrolės sistemos, netinkamai tvarkomi privalomi veiklos dokumentai',
+              'Vykdomoje veikloje produktai netinkamai ženklinami',
+              'Vykdomoje veikloje netinkamai tvarkomos maisto atliekos',
+              'Vykdomoje viešojo maitinimo veikloje meniu neatitinka reikalavimų',
+              'Patiekalai patiekiami netinkamos temperatūros',
+              'Veiklos reklama pažeidžia teisės aktus',
+              'Nepateikiama privalomoji informacoja apie vykdomą veiklą',
+              'Vykdomoje veikloje daromi kiti pažeidimai',
+            ]),
+            spField: 'paz_tip3',
+            dynamicFields: [
+              ...dm(4, [0], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.multiselect(8, '9.5', 'Pasirinkite pranešamus pažeidimus', {
+            required: true,
+            options: o([
+              'Produktu prekiaujama be leidimo ar neleistinoje vietoje',
+              'Produktas parduodamas ar naudojamas be reikiamų dokumentų',
+              'Produktas pasibaigusio galiojimo',
+              'Produktas laikomas netinkamomis sąlygomis (per karšta, šalta, drėgna, nešvaru)',
+              'Produktas ženklinamas netinkamai arba klaidinančiai (pvz., nėra informacijos lietuvių kalba, netiksli sudėtis, nėra galiojimo datos)',
+              'Produktas neaiškios kilmės arba galimai nelegaliai įvežtas',
+              'Produktas turi neįprastą kvapą, spalvą, konsistenciją arba atrodo sugedęs',
+              'Įtariama, kad produkte yra neleistinų ar pavojingų medžiagų',
+              'Produktas falsifikuotas arba imituojantis kito gamintojo produktą',
+              'Informacija apie produktą klaidinanti ar neišsami',
+              'Kiti pažeidimai',
+            ]),
+            spField: 'paz_tip3',
+            dynamicFields: [
+              ...dm(4, [1], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.text(9, 18, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
+            required: true,
+            spField: 'aplink',
+          }),
+          q.text(
+            '9.5',
+            10,
+            'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes',
+            {
+              required: true,
+              spField: 'aplink',
+            },
+          ),
+        ],
+      },
+      {
+        ...pages.tipas(),
+        questions: [
+          q.radio(10, undefined, 'Pasirinkite apie ką pranešate', {
+            options: [os('Veterinarinius vaistus', 11), os('Pašarus', 11)],
+            required: true,
+            spField: 'pran_apie',
+          }),
+          q.input(11, 12, 'Nurodykite tikslų, pilną produkto pavadinimą.', {
+            required: true,
+            spField: 'produkt_pav',
+          }),
+          q.number(12, 13, 'Nurodykite apie kokį produkto kiekį pranešate', {
+            required: true,
+            spField: 'kiekis',
+          }),
+          q.select(13, 14, 'Pasirinkite nurodyto produkto kiekio matavimo vienetus', {
+            options: o(['Vienetai', 'Gramai', 'Kilogramai', 'Mililitrai', 'Litrai']),
+            required: true,
+            spField: 'matas',
+          }),
+          q.input(14, 15, 'Jei galite nurodykite produkto gamintoją', {
+            required: false,
+            spField: 'produkt_gam',
+          }),
+          q.input(15, 16, 'Jei galite nurodykite produkto platintoją', {
+            required: false,
+            spField: 'produkt_plat',
+          }),
+          q.input(16, 17, 'Jei galite nurodykite produkto partijos numerį', {
+            required: false,
+            spField: 'part_num',
+          }),
+          q.date(17, 18, 'Jei galite nurodykite produkto tinkamumo vartoti terminą', {
+            required: false,
+            spField: 'vart_term',
+          }),
+        ],
+        dynamicFields: [
+          ...dm(4, [1], {
+            condition: false,
+          }),
+        ],
+      },
+      {
+        ...pages.vieta(),
+        questions: [
+          q.radio(18, undefined, 'Nurodykite produkto prekybos vietą', {
+            options: [
+              os('Fizinė parduotuvė', 19),
+              os('Internetinė parduotuvė', 20),
+              os('Socialiniai tinklai', 21),
+            ],
+            required: false,
+            spField: 'prekyb_vieta',
+            dynamicFields: [
+              ...dm(4, [1], {
+                title: 'Nurodykite apie kokio tipo veiklą pranešate',
+              }),
+            ],
+          }),
+          q.address(19, 22, 'Nurodykite prekybos vietos adresą', {
+            required: true,
+            spField: 'adresas',
+            dynamicFields: [
+              ...dm(4, [1], {
+                title: 'Nurodykite veiklos vietos adresą',
+              }),
+            ],
+            condition: [
+              {
+                question: 18,
+                valueIndex: 0,
+              },
+            ],
+          }),
+          q.input(20, 22, 'Nurodykite prekybos puslapio nuorodą', {
+            required: true,
+            spField: 'psl_adresas',
+            dynamicFields: [
+              ...dm(4, [1], {
+                title: 'Nurodykite veiklos vykdymo puslapio nuorodą',
+              }),
+            ],
+            condition: [
+              {
+                question: 18,
+                valueIndex: 1,
+              },
+            ],
+          }),
+          q.input(21, 22, 'Nurodykite nuorodą į socialinius tinklus', {
+            required: true,
+            spField: 'psl_adresas',
+            condition: [
+              {
+                question: 18,
+                valueIndex: 2,
+              },
+            ],
+          }),
+          q.input(22, 23, 'Nurodykite produkto prekybos vietos pavadinimą', {
+            required: true,
+            spField: 'prekyb_pav',
+            dynamicFields: [
+              ...dm(4, [1], {
+                title: 'Nurodykite veiklos vietos pavadinimą',
+              }),
+            ],
+          }),
+          q.text(
+            23,
+            24,
+            'Jei galite nurodykyte fizinius ar juridinius asmenis vykdančius prekybos veiklą',
+            {
+              required: true,
+              spField: 'pap_adr_info',
+              dynamicFields: [
+                ...dm(4, [1], {
+                  title: 'Jei galite nurodykyte fizinius ar juridinius asmenis vykdančius veiklą',
+                }),
+              ],
+            },
+          ),
+          q.text(
+            24,
+            25,
+            'Nurodykite visą žinomą papildomą informaciją apie prekybos vietą, nuo darbo valandų iki patekimo į patalpas informacijos',
+            {
+              required: true,
+              spField: 'patek',
+              dynamicFields: [
+                ...dm(4, [1], {
+                  title:
+                    'Nurodykite visą žinomą papildomą informaciją apie veiklos vietą, nuo darbo valandų iki patekimo į patalpas informacijos',
+                }),
+              ],
+            },
+          ),
+        ],
+      },
+      // == dokumentai ==
+      {
+        title: 'Vaizdinė medžiaga ir kiti dokumentai',
+        description:
+          'Pridėkite vaizdinę medžiagą (nuotraukas, video) arba kitus dokumentus įrodančius pateikiamus pažeidimus',
+        questions: [
+          q.files(
+            25,
+            26,
+            'Jei galite pridėkite nuotraukas ar kitus dokumentus kuriuose atsispindėtu pranešami pažeidimai',
+            {
+              required: false,
+              spField: 'files',
+            },
+          ),
+          q.files(
+            26,
+            27,
+            'Jei galite pridėkite nuotraukas ar kitus dokumentus kuriuose atsispindėtu pranešami pažeidimai',
+            {
+              required: false,
+              spField: 'files_zenkl',
+              dynamicFields: [
+                ...dm(4, [1], {
+                  condition: false,
+                }),
+              ],
+            },
+          ),
+          q.files(27, 28, 'Jei galite pridėkite dokumentus įrodančius produkto įsigijimo faktą', {
+            required: false,
+            spField: 'files_fakt',
+            dynamicFields: [
+              ...dm(4, [1], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.files(28, 29, 'Jei galite pridėkite kitus su pranešamu įvykiu susijusius įrodymus', {
+            required: false,
+            spField: 'files_kiti',
+          }),
+        ],
+      },
 
-  //       // =======================================
-  //     ],
-  //   },
+      pages.teises(29),
+
+      // =======================================
+    ],
+  },
 ];
 
 @Service({
