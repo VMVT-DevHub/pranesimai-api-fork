@@ -1800,12 +1800,11 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.multiselect(9, 10, 'Nurodykite apie kokio tipo gyvūnus pranešate', {
             required: true,
             spField: 'gyv_tip',
-            options: o([
-              //VSP1
-              'Gyvūnas augintinis',
-              'Ūkinis gyvūnas',
-              'Laukinis gyvūnas',
-            ]),
+            options: [
+              os('Gyvūnas augintinis', '9.1'),
+              os('Ūkinis gyvūnas', '9.2'),
+              os('Laukinis gyvūnas', '9.3'),
+            ],
             dynamicFields: [
               ...dm(4, [1, 2, 3], {
                 condition: false,
@@ -1813,46 +1812,134 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           q.multiselect(
+            '9.1',
+            undefined,
+            'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
+            {
+              required: true,
+              options: [os('Šuo', 12), os('Katė', 12), os('Šeškas', 12), os('Kita', '9.1.1')],
+              condition: c(9),
+            },
+          ),
+          q.input(
+            '9.1.1',
+            12,
+            'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
+            {
+              required: true,
+              spField: 'gyv_pav',
+              condition: [
+                {
+                  question: 9,
+                  valueIndex: 0,
+                },
+                {
+                  question: '9.1',
+                  valueIndex: 3,
+                },
+              ],
+            },
+          ),
+          q.multiselect(
+            '9.2',
+            undefined,
+            'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
+            {
+              required: true,
+              options: [
+                os('Galvijas', 12),
+                os('Ožka', 12),
+                os('Kiaulė', 12),
+                os('Pauštis', 12),
+                os('Arklys', 12),
+                os('Kita', '9.2.1'),
+              ],
+              condition: c(9),
+            },
+          ),
+          q.input(
+            '9.2.1',
+            12,
+            'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
+            {
+              required: true,
+              spField: 'gyv_pav',
+              condition: [
+                {
+                  question: 9,
+                  valueIndex: 1,
+                },
+                {
+                  question: '9.2',
+                  valueIndex: 5,
+                },
+              ],
+            },
+          ),
+          q.multiselect(
+            '9.3',
+            undefined,
+            'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
+            {
+              required: true,
+              options: [
+                os('Šernas', 12),
+                os('Stirna', 12),
+                os('Paukštis', 12),
+                os('Briedis', 12),
+                os('Lapė', 12),
+                os('Kita', '9.3.1'),
+              ],
+              condition: c(9),
+            },
+          ),
+          q.input(
+            '9.3.1',
+            12,
+            'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
+            {
+              required: true,
+              spField: 'gyv_pav',
+              condition: [
+                {
+                  question: 9,
+                  valueIndex: 2,
+                },
+                {
+                  question: '9.3',
+                  valueIndex: 5,
+                },
+              ],
+            },
+          ),
+          q.multiselect(
             10,
             undefined,
             'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
             {
               required: true,
               spField: 'gyv_rus',
-              options: [
-                os('Šuo', 12),
-                os('Katė', 12),
-                os('Šeškas', 12),
-                os('Galvijas', 12),
-                os('Ožka', 12),
-                os('Kiaulė', 12),
-                os('Pauštis', 12),
-                os('Arklys', 12),
-                os('Šernas', 12),
-                os('Stirna', 12),
-                os('Paukštis', 12),
-                os('Briedis', 12),
-                os('Lapė', 12),
-                os('Kita', 11),
-              ],
+              options: [os('Šuo', 12), os('Katė', 12), os('Šeškas', 12), os('Kita', 11)],
               dynamicFields: [
-                ...dm(4, [2, 3], {
+                ...dm(4, [0, 2, 3], {
                   condition: false,
                 }),
-                ...dm(4, [0], {
-                  options: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
-                }),
                 ...dm(4, [1], {
-                  options: [0, 1, 2, 13],
+                  options: [0, 1, 2, 3],
                 }),
               ],
             },
           ),
-          q.input(11, 12, 'Nurodykite gyvūnų apie kuriuos pranešate, pavadinimus', {
-            required: true,
-            condition: c(10),
-            spField: 'gyv_rus_kita',
-          }),
+          q.input(
+            11,
+            12,
+            'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
+            {
+              required: true,
+              condition: c(10),
+              spField: 'gyv_rus_kita',
+            },
+          ),
         ],
         dynamicFields: [
           ...dm(4, [2, 3], {
@@ -2402,6 +2489,277 @@ const SURVEYS_SEED: SurveyTemplate[] = [
       pages.teises(29),
 
       // =======================================
+    ],
+  },
+  // SURVEY 4
+  {
+    title: 'Įtarimų dėl plintančių gyvūnų ligų ir gaišenų pranešimų anketa',
+    icon: `<svg viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M15.3418 49.5V43.4925C15.3418 40.32 16.6018 37.26 18.8518 35.01C21.1018 32.76 24.1618 31.5 27.3343 31.5C33.9718 31.5 39.3268 36.8775 39.3268 43.4925V49.5H15.3418Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M44.5918 38.9927V34.4927" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4.83398 49.5001H15.3415V44.2576L4.83398 39.0151V49.5226V49.5001Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M18.8518 35.01L15.3418 31.5L18.3343 28.5075L16.8268 27" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.3418 49.4999C15.3418 47.9024 15.9718 46.3724 17.0968 45.2474C18.2218 44.1224 19.7518 43.4924 21.3268 43.4924C21.3268 40.1849 24.0043 37.4849 27.3343 37.4849C33.9493 37.4849 39.3268 42.8624 39.3268 49.4774H15.3193L15.3418 49.4999Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M49.8336 44.2576C49.8336 41.3551 47.4936 39.0151 44.5911 39.0151C41.6886 39.0151 39.3486 41.3551 39.3486 44.2576V49.5001H44.5911C47.4936 49.5001 49.8336 47.1601 49.8336 44.2576Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M30.1243 19.3277L39.7318 23.5352C42.9268 24.9302 46.6393 23.4677 48.0343 20.2952C49.4293 17.1002 47.9668 13.3877 44.7943 11.9927L35.1868 7.78517C31.9918 6.39017 28.2793 7.85267 26.8843 11.0252C25.4893 14.2202 26.9518 17.9327 30.1243 19.3277Z" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M42.2736 17.7524C41.1261 15.8399 39.2586 15.1874 37.0761 15.6374C35.1411 16.0424 33.5886 15.2099 32.6436 13.5449" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M26.8612 11.025L24.1387 9.85498" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M27.2661 16.8525L24.7461 18.405" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M43.4893 23.9399L44.0743 26.8424" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M48.0342 20.2725L50.7567 21.465" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M47.6289 14.4675L50.1714 12.915" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31.4063 7.38008L30.8213 4.45508" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M34.9161 21.4873L33.7236 24.2098" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M39.9561 9.78744L41.1486 7.06494" stroke="#2671D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+    description:
+      'Pranešimai apie pastebėtas laukinių gyvūnų gaišenas, galimai susijusias su plintančiomis gyvūnų ligomis, pranešimai apie pastebėtas ūkinių gyvūnų gaišenas.',
+    authType: SurveyAuthType.OPTIONAL,
+    spList: '',
+    pages: [
+      // =======================================
+
+      pages.kontaktiniai(3),
+
+      // =======================================
+      {
+        ...pages.tema(),
+        questions: [
+          q.infocard(4, undefined, 'Pasirinkite dėl ko pranešate', {
+            required: true,
+            riskEvaluation: false,
+            options: [
+              os('Pranešimai apie šernų gaišenas', 5, 'REIKIA.'), // GGL1
+              os('Pranešimai apie kitų gyvūnų ar paukščių gaišenas', 5, 'REIKIA 2.'), // GGL2
+              os('Pranešimai apie segančius gyvūnūs ar paukščius', 5, 'REIKIA 3.'), // GGL3
+            ],
+            spField: 'pran_tema',
+          }),
+        ],
+      },
+      // =======================================
+      {
+        ...pages.tipas(),
+        questions: [
+          q.date(5, 6, 'Nurodykite pranešamo įvykio datą', {
+            spField: 'ivyk_data',
+            required: true,
+          }),
+          q.radio(6, 7, 'Ar pretenduojate gauti išmoką dėl rastos šerno gaišenos?', {
+            required: true,
+            riskEvaluation: false,
+            options: o(['Taip', 'Ne']),
+            dynamicFields: [
+              ...dm(4, [1, 2], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.text(
+            7,
+            8,
+            'Nurodykite kokie simptomai pasireiškė gyvūnui kurie sukėlė įtarimų apie gyvūno galimą sergamumą plintančiomis ligomis',
+            {
+              required: true,
+              dynamicFields: [
+                ...dm(4, [0, 1], {
+                  condition: false,
+                }),
+              ],
+            },
+          ),
+          q.radio(8, 9, 'Ar dėl įtariamų simptomų kreipėtės į veterinarijos gydytojus?', {
+            required: true,
+            spField: 'ar_kreiptasi',
+            riskEvaluation: false,
+            options: o(['Taip', 'Ne']),
+            dynamicFields: [
+              ...dm(4, [0, 1], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.text(9, 10, 'Nurodykite visus su pranešamu įvykiu susijusius faktus ir aplinkybes', {
+            required: true,
+            spField: 'aplink',
+          }),
+        ],
+      },
+      {
+        ...pages.detales(),
+        questions: [
+          q.radio(10, 11, 'Nurodykite apie kokio tipo gaišeną pranešate', {
+            required: true,
+            riskEvaluation: false,
+            options: o(['Rasta gaišena', 'Eismo įvykis']),
+            dynamicFields: [
+              ...dm(4, [2], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.multiselect(11, 14, 'Nurodykite apie kokio tipo gyvūnus pranešate', {
+            required: true,
+            spField: 'paz_tip3',
+            options: [
+              os('Gyvūnas augintinis', '11.1'),
+              os('Ūkinis gyvūnas', '11.2'),
+              os('Laukinis gyvūnas', '11.3'),
+            ],
+            dynamicFields: [
+              ...dm(4, [0], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.multiselect(
+            '11.1',
+            undefined,
+            'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
+            {
+              required: true,
+              options: [os('Šuo', 14), os('Katė', 14), os('Šeškas', 14), os('Kita', '11.1.1')],
+              condition: c(11),
+            },
+          ),
+          q.input(
+            '11.1.1',
+            14,
+            'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
+            {
+              required: true,
+              spField: 'gyv_pav',
+              condition: [
+                {
+                  question: 11,
+                  valueIndex: 0,
+                },
+                {
+                  question: '11.1',
+                  valueIndex: 3,
+                },
+              ],
+            },
+          ),
+          q.multiselect(
+            '11.2',
+            undefined,
+            'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
+            {
+              required: true,
+              options: [
+                os('Galvijas', 14),
+                os('Ožka', 14),
+                os('Kiaulė', 14),
+                os('Pauštis', 14),
+                os('Arklys', 14),
+                os('Kita', '11.2.1'),
+              ],
+              condition: c(11),
+            },
+          ),
+          q.input(
+            '11.2.1',
+            14,
+            'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
+            {
+              required: true,
+              spField: 'gyv_pav',
+              condition: [
+                {
+                  question: 11,
+                  valueIndex: 1,
+                },
+                {
+                  question: '11.2',
+                  valueIndex: 5,
+                },
+              ],
+            },
+          ),
+          q.multiselect(
+            '11.3',
+            undefined,
+            'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
+            {
+              required: true,
+              options: [
+                os('Šernas', 14),
+                os('Stirna', 14),
+                os('Paukštis', 14),
+                os('Briedis', 14),
+                os('Lapė', 14),
+                os('Kita', '11.3.1'),
+              ],
+              condition: c(11),
+            },
+          ),
+          q.input(
+            '11.3.1',
+            14,
+            'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
+            {
+              required: true,
+              spField: 'gyv_pav',
+              condition: [
+                {
+                  question: 11,
+                  valueIndex: 2,
+                },
+                {
+                  question: '11.3',
+                  valueIndex: 5,
+                },
+              ],
+            },
+          ),
+        ],
+      },
+      {
+        ...pages.vieta(),
+        questions: [
+          q.radio(14, undefined, 'Ar galite nurodyti tikslų gaišenos vietos adresą?', {
+            required: true,
+            options: [os('Taip', 15), os('Ne', 16)],
+          }),
+          q.address(15, 16, 'Nurodykite adresą, kuriuo vykdoma veterinarijos praktikos veikla', {
+            required: true,
+            spField: 'adresas',
+            condition: [
+              {
+                question: 14,
+                valueIndex: 0,
+              },
+            ],
+          }),
+          q.input(16, 17, 'Nurodykite gyvūnų laikymo vietos koordinates', {
+            required: true,
+            spField: 'koord',
+            condition: [
+              {
+                question: 14,
+                valueIndex: 1,
+              },
+            ],
+          }),
+          q.text(17, 18, 'Nurodykite visą papildomą informaciją apie pranešamo įvykio vietą', {
+            required: false,
+            spField: 'pap_adr_info',
+          }),
+        ],
+      },
+      {
+        title: 'Vaizdinė medžiaga ir kiti dokumentai',
+        description:
+          'Pridėkite vaizdinę medžiagą (nuotraukas, video) arba kitus dokumentus įrodančius pateikiamus pažeidimus',
+        questions: [
+          q.files(18, 19, 'Jei galite pridėkite kitus su pranešamu įvykiu susijusius įrodymus', {
+            required: false,
+            spField: 'irodym',
+          }),
+        ],
+      },
+      pages.teises(19),
     ],
   },
 ];
