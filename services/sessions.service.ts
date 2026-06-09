@@ -207,6 +207,7 @@ export default class SessionsService extends moleculer.Service {
       {
         startingQuestions: survey.firstPage.questions.map((q) => q.id),
         skipAuthQuestions: !auth,
+        skipAnonQuestions: auth,
       },
     );
 
