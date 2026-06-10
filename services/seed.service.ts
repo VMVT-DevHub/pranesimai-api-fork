@@ -226,6 +226,7 @@ const Identifikacija = (id: number, idOut: number | string) => [
     riskEvaluation: false,
     spField: 'darbuot',
     options: o([
+      '-',
       'Zigmantė Geštautienė',
       'Vitalija Valiūnienė',
       'Neringa Price',
@@ -1546,7 +1547,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           authRelation: null,
         },
         [
-          q.input(2, 12, 'Prašome nurodyti savo kontaktinį telefono numerį', {
+          q.input(2, '2.0', 'Prašome nurodyti savo kontaktinį telefono numerį', {
             required: true,
             riskEvaluation: false,
             spField: 'pran_tel',
@@ -1554,10 +1555,6 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           }),
         ],
       ),
-      {
-        title: 'Identifikacija',
-        questions: [...Identifikacija(12, '2.0')],
-      },
 
       // =======================================
       {
