@@ -35,6 +35,7 @@ interface Fields extends CommonFields {
     required: Question['required'];
     riskEvaluation: Question['riskEvaluation'];
     spField: Question['spField'];
+    customLogic?: Question['customLogic'];
   }>;
   csv: string;
 }

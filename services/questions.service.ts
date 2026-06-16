@@ -71,6 +71,7 @@ interface Fields extends CommonFields {
   >;
   options: undefined;
   spField?: string;
+  customLogic?: string;
 }
 
 interface Populates extends CommonPopulates {
@@ -163,6 +164,10 @@ export type Question<
             value: 'any',
           },
         },
+      },
+
+      customLogic: {
+        type: 'string',
       },
 
       spField: {
