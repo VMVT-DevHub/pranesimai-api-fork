@@ -16,6 +16,6 @@ exports.up = function (knex) {
  */
 exports.down = function (knex) {
   return knex.schema.withSchema(schema).alterTable('questions', (table) => {
-    table.string('customLogic');
+    table.dropColumn('customLogic');
   });
 };
