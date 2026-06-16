@@ -37,6 +37,7 @@ type SurveyTemplate = {
       title: Question['title'];
       hint?: Question['hint'];
       spField?: Question['spField'];
+      customLogic?: Question['customLogic'];
       description?: Question['description'];
       required: Question['required'];
       riskEvaluation: Question['riskEvaluation'];
@@ -654,7 +655,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               os('Vykdomoje veikloje daromi kiti pažeidimai', 71), // 45
               os('Kiti pažeidimai', 85), // 46
             ],
-            spField: 'paz_tip3',
+            spField: 'paz_tip',
+            customLogic: 'select_3',
             dynamicFields: [
               ...dm(4, [0], {
                 //1
@@ -774,7 +776,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.input(29, 41, 'Nurodykite pilną ir tikslų patiekalo pavadinimą', {
             required: true,
             riskEvaluation: false,
-            spField: 'patiek_pav',
+            spField: 'pavad',
             condition: [
               {
                 question: 9,
@@ -1692,7 +1694,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               ), // 52
               os('Kiti pažeidimai', 7), // 53
             ],
-            spField: 'paz_tip3',
+            spField: 'paz_tip',
+            customLogic: 'select_3',
             dynamicFields: [
               // VSP1
               ...dm(4, [0], {
@@ -1819,6 +1822,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               required: true,
               options: [os('Šuo', 12), os('Katė', 12), os('Šeškas', 12), os('Kita', '9.1.1')],
               condition: c(9),
+              spField: 'gyv_rus',
             },
           ),
           q.input(
@@ -1827,7 +1831,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
             {
               required: true,
-              spField: 'gyv_pav',
+              spField: 'gyv_rus_kita',
               condition: [
                 {
                   question: 9,
@@ -1855,6 +1859,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
                 os('Kita', '9.2.1'),
               ],
               condition: c(9),
+              spField: 'gyv_rus',
             },
           ),
           q.input(
@@ -1863,7 +1868,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
             {
               required: true,
-              spField: 'gyv_pav',
+              spField: 'gyv_rus_kita',
               condition: [
                 {
                   question: 9,
@@ -1891,6 +1896,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
                 os('Kita', '9.3.1'),
               ],
               condition: c(9),
+              spField: 'gyv_rus',
             },
           ),
           q.input(
@@ -1899,7 +1905,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
             {
               required: true,
-              spField: 'gyv_pav',
+              spField: 'gyv_rus_kita',
               condition: [
                 {
                   question: 9,
@@ -2256,7 +2262,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               'Nepateikiama privalomoji informacoja apie vykdomą veiklą',
               'Vykdomoje veikloje daromi kiti pažeidimai',
             ]),
-            spField: 'paz_tip3',
+            spField: 'paz_tip',
+            customLogic: 'select_3',
             dynamicFields: [
               ...dm(4, [0], {
                 condition: false,
@@ -2278,7 +2285,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               'Informacija apie produktą klaidinanti ar neišsami',
               'Kiti pažeidimai',
             ]),
-            spField: 'paz_tip3',
+            spField: 'paz_tip',
+            customLogic: 'select_3',
             dynamicFields: [
               ...dm(4, [1], {
                 condition: false,
@@ -2547,6 +2555,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           }),
           q.radio(6, 7, 'Ar pretenduojate gauti išmoką dėl rastos šerno gaišenos?', {
             required: true,
+            spField: 'ismoka',
             riskEvaluation: false,
             options: o(['Taip', 'Ne']),
             dynamicFields: [
@@ -2561,6 +2570,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite kokie simptomai pasireiškė gyvūnui kurie sukėlė įtarimų apie gyvūno galimą sergamumą plintančiomis ligomis',
             {
               required: true,
+              spField: 'simp',
               dynamicFields: [
                 ...dm(4, [0, 1], {
                   condition: false,
@@ -2590,6 +2600,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
         questions: [
           q.radio(10, 11, 'Nurodykite apie kokio tipo gaišeną pranešate', {
             required: true,
+            spField: 'ivyk_tipas',
             riskEvaluation: false,
             options: o(['Rasta gaišena', 'Eismo įvykis']),
             dynamicFields: [
@@ -2600,7 +2611,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           }),
           q.multiselect(11, 14, 'Nurodykite apie kokio tipo gyvūnus pranešate', {
             required: true,
-            spField: 'paz_tip3',
+            spField: 'paz_tip', //!!
+            customLogic: 'select_3',
             options: [
               os('Gyvūnas augintinis', '11.1'),
               os('Ūkinis gyvūnas', '11.2'),
@@ -2618,6 +2630,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
             {
               required: true,
+              spField: 'gyv_rus',
               options: [os('Šuo', 14), os('Katė', 14), os('Šeškas', 14), os('Kita', '11.1.1')],
               condition: c(11),
             },
@@ -2628,7 +2641,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
             {
               required: true,
-              spField: 'gyv_pav',
+              spField: 'gyv_rus_kita',
               condition: [
                 {
                   question: 11,
@@ -2647,6 +2660,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
             {
               required: true,
+              spField: 'gyv_rus',
               options: [
                 os('Galvijas', 14),
                 os('Ožka', 14),
@@ -2664,7 +2678,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
             {
               required: true,
-              spField: 'gyv_pav',
+              spField: 'gyv_rus_kita',
               condition: [
                 {
                   question: 11,
@@ -2683,6 +2697,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Pasirinkite apie kokios rūšies gyvūną ar gyvūnus pranešate',
             {
               required: true,
+              spField: 'gyv_rus',
               options: [
                 os('Šernas', 14),
                 os('Stirna', 14),
@@ -2700,7 +2715,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             'Nurodykite gyvūnų apie kuriuos pranešate pavadinimus jei jų pasirenkamame saraše nebuvo',
             {
               required: true,
-              spField: 'gyv_pav',
+              spField: 'gyv_rus_kita',
               condition: [
                 {
                   question: 11,
@@ -2755,7 +2770,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
         questions: [
           q.files(18, 19, 'Jei galite pridėkite kitus su pranešamu įvykiu susijusius įrodymus', {
             required: false,
-            spField: 'irodym',
+            spField: 'files_kiti',
           }),
         ],
       },
