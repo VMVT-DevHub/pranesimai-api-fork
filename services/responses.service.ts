@@ -415,6 +415,8 @@ export default class ResponsesService extends moleculer.Service {
           if (!Array.isArray(value)) {
             errors[question.id] = 'FILES must be array';
           } else {
+            const resolvedFiles = [];
+
             for (const item of value) {
               if (item.url && item.name && item.size) {
                 resolvedFiles.push(item);
