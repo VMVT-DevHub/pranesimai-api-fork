@@ -22,6 +22,7 @@ export enum QuestionType {
   // value = option.id
   SELECT = 'SELECT',
   RADIO = 'RADIO',
+  INFOCARD = 'INFOCARD',
   ADDRESS = 'ADDRESS',
 
   // value = [11,23] (array of option.id)
@@ -33,6 +34,7 @@ export enum QuestionType {
   // text value
   EMAIL = 'EMAIL',
   INPUT = 'INPUT',
+  NUMBER = 'NUMBER',
   TEXT = 'TEXT',
   DATE = 'DATE',
   DATETIME = 'DATETIME',
@@ -56,6 +58,7 @@ interface Fields extends CommonFields {
   type: QuestionType;
   title?: string;
   hint?: string;
+  requiresAuth?: string;
   description?: string;
   nextQuestion?: Question['id'];
   anonOnly?: boolean;
@@ -63,12 +66,13 @@ interface Fields extends CommonFields {
   condition?: {
     question: Question['id'];
     value: any;
-  };
+  }[];
   dynamicFields: DynamicFields<
     Omit<Question, 'options'> & { options: Array<QuestionOption['id']> }
   >;
   options: undefined;
   spField?: string;
+  customLogic?: string;
 }
 
 interface Populates extends CommonPopulates {
@@ -145,6 +149,7 @@ export type Question<
       title: 'string',
       description: 'string',
       hint: 'string',
+      requiresAuth: 'boolean',
 
       priority: {
         type: 'number',
@@ -156,11 +161,18 @@ export type Question<
       },
 
       condition: {
-        type: 'object',
-        properties: {
-          question: 'number',
-          value: 'any',
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            question: 'number',
+            value: 'any',
+          },
         },
+      },
+
+      customLogic: {
+        type: 'string',
       },
 
       spField: {

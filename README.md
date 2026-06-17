@@ -29,7 +29,7 @@ To get started with the Pranešimai API, follow the instructions below.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/vmvt-devhub/pranesimai-api.git
+   git clone https://github.com/vmvt-devhub/pranesimai-api-fork.git
    ```
 
 2. Install the required dependencies:
@@ -39,8 +39,8 @@ To get started with the Pranešimai API, follow the instructions below.
    yarn install
    ```
 
-
 ### Usage
+
 1. Set up the required environment variables. Copy the `.env.example` file to `.env` and provide the necessary values for the variables.
 
 2. Start the API server:

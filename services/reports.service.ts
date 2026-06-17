@@ -35,6 +35,7 @@ interface Fields extends CommonFields {
     required: Question['required'];
     riskEvaluation: Question['riskEvaluation'];
     spField: Question['spField'];
+    customLogic?: Question['customLogic'];
   }>;
   csv: string;
 }
@@ -140,24 +141,28 @@ export default class ReportsService extends moleculer.Service {
         let answer = value;
 
         if (question.condition) {
-          const { question: conditionQuestion, value: conditionValue } = question.condition;
-          const responseValue = response.values[conditionQuestion];
+          const allConditionsMet = question.condition.every((condition) => {
+            const { question: conditionQuestion, value: conditionValue } = condition;
+            const responseValue = response.values[conditionQuestion];
 
-          if (Array.isArray(responseValue)) {
-            if (!responseValue.includes(conditionValue)) {
-              continue;
+            if (Array.isArray(responseValue)) {
+              return responseValue.includes(conditionValue);
+            } else {
+              return responseValue === conditionValue;
             }
-          } else {
-            if (responseValue !== conditionValue) {
-              continue;
-            }
+          });
+
+          if (!allConditionsMet) {
+            continue;
           }
         }
 
         if (value) {
           switch (question.type) {
             case QuestionType.RADIO:
+            case QuestionType.INFOCARD:
             case QuestionType.SELECT:
+              // case QuestionType.ADDRESS:
               const option = question.options.find((o) => o.id === value);
               answer = option.title;
 
