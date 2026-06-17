@@ -61,7 +61,7 @@ export default function (opts: any = {}) {
   const schema = {
     mixins: [DbService(opts), filtersMixin()],
 
-    async started() {
+    async started(this: any) {
       await this.getAdapter();
       // Seeding if the DB is empty
       const count = await this.countEntities(null, {});
@@ -96,11 +96,12 @@ export default function (opts: any = {}) {
       ): Promise<any> {
         const { id, queryKey, query, mapping, mappingMulti, mappingField } = ctx.params;
 
-        delete ctx.params.queryKey;
-        delete ctx.params.id;
-        delete ctx.params.mapping;
-        delete ctx.params.mappingMulti;
-        delete ctx.params.mappingField;
+        const queryParams = ctx.params as Partial<typeof ctx.params>;
+        delete queryParams.queryKey;
+        delete queryParams.id;
+        delete queryParams.mapping;
+        delete queryParams.mappingMulti;
+        delete queryParams.mappingField;
 
         const entities = await this.findEntities(ctx, {
           ...ctx.params,

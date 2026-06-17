@@ -3,11 +3,11 @@
 // @ts-ignore
 import MinioMixin from 'moleculer-minio';
 import Moleculer, { Context, RestSchema } from 'moleculer';
-import { Action, Method, Service } from 'moleculer-decorators';
+import { Action, Service } from 'moleculer-decorators';
 import moleculer from 'moleculer';
 import mime from 'mime-types';
 import { v4 as uuidv4 } from 'uuid';
-import { MultipartMeta, throwNotFoundError } from '../types';
+import { MultipartMeta } from '../types';
 import { RestrictionType } from './api.service';
 
 export const BUCKET_NAME = () => process.env.MINIO_BUCKET || 'pranesimai';
@@ -39,7 +39,7 @@ export function getPublicFileName(length: number = 30) {
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const charactersLength = characters.length;
-    for (var i = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
@@ -53,7 +53,7 @@ export function getPublicFileName(length: number = 30) {
   mixins: [MinioMixin],
   settings: {
     endPoint: process.env.MINIO_ENDPOINT,
-    port: parseInt(process.env.MINIO_PORT),
+    port: parseInt(process.env.MINIO_PORT || '9000'),
     useSSL: process.env.MINIO_USESSL === 'true',
     accessKey: process.env.MINIO_ACCESSKEY,
     secretKey: process.env.MINIO_SECRETKEY,
@@ -77,7 +77,7 @@ export default class FilesService extends Moleculer.Service {
     }>,
   ) {
     const { bucketName, objectName } = ctx.params;
-    let hostUrl = process.env.MINIO_PUBLIC_URL;
+    const hostUrl = process.env.MINIO_PUBLIC_URL;
     return `${hostUrl}/${bucketName}/${objectName}`;
   }
   @Action({
@@ -120,7 +120,7 @@ export default class FilesService extends Moleculer.Service {
           },
         },
       });
-    } catch (_e) {
+    } catch {
       throw new Moleculer.Errors.MoleculerClientError(
         'Unable to upload file.',
         400,
@@ -134,6 +134,14 @@ export default class FilesService extends Moleculer.Service {
     });
 
     const fileId = uuidv4();
+
+    if (!this.broker.cacher) {
+      throw new Moleculer.Errors.MoleculerClientError(
+        'File upload cache is not configured.',
+        500,
+        'CACHE_NOT_CONFIGURED',
+      );
+    }
 
     await this.broker.cacher.set(
       `uploaded-file:${fileId}`,

@@ -299,7 +299,7 @@ flowchart TB;
  ${!question.required ? `optional-${question.id}>Neprivalomas];` : ''}
  ${features.spField && question.spField ? `spField-${question.id}[/${question.spField}\\];` : ''}
  ${
-   features.conditions && question.condition.length > 0
+   features.conditions && question.condition?.length
      ? `condition-${question.id}{{Rodomas jei}};`
      : ''
  }
@@ -336,7 +336,7 @@ end`;
           .map(
             (question) =>
               `${
-                features.conditions && question.condition.length > 0
+                features.conditions && question.condition?.length
                   ? `condition-${question.id} -.-> option-${question.condition.map(
                       (condition) => ` ${condition.value}`,
                     )}`

@@ -290,6 +290,10 @@ export default class SessionsService extends moleculer.Service {
     auth: RestrictionType.SESSION,
   })
   async cancel(ctx: Context<unknown, MetaSession & ResponseHeadersMeta>) {
+    if (!ctx.meta.session) {
+      return;
+    }
+
     await this.updateEntity(ctx, {
       id: ctx.meta.session.id,
       canceledAt: new Date(),

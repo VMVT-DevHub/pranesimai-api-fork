@@ -67,7 +67,7 @@ type SurveyTemplate = {
 };
 
 type SurveyTemplatePage = SurveyTemplate['pages'][number];
-type SurveyTemplateQuestion = SurveyTemplatePage['questions'][number];
+type SurveyTemplateQuestion = NonNullable<SurveyTemplatePage['questions']>[number];
 type QuestionExtends = Partial<SurveyTemplateQuestion>;
 
 const q = (
@@ -78,7 +78,7 @@ const q = (
   fields: Partial<SurveyTemplateQuestion> = {},
 ): SurveyTemplateQuestion => ({
   id: `${id}`,
-  nextQuestion: nextQuestion && `${nextQuestion}`,
+  nextQuestion: nextQuestion !== undefined ? `${nextQuestion}` : undefined,
   type,
   title,
   required: true,
@@ -138,11 +138,12 @@ const os = (
   requiresAuth?: boolean,
 ) => ({
   title,
-  nextQuestion: nextQuestion && `${nextQuestion}`,
+  nextQuestion: nextQuestion !== undefined ? `${nextQuestion}` : undefined,
   description: description && `${description}`,
   requiresAuth: requiresAuth && requiresAuth,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const helperVeiklos = (id: number | string, idOut: number | string, qa: QuestionExtends = {}) => [
   q.radio(id, undefined, 'Nurodykite prekybos būdą', {
     options: [os('Fizinėje prekybos vietoje', `${id}.1`), os('Internetu', `${id}.2`)],
@@ -2861,7 +2862,7 @@ export default class SeedService extends moleculer.Service {
 
       // 1 - first step: create pages with partial questions
       for (const pageItem of pages) {
-        const { questions = [], dynamicFields, ...pageData } = pageItem;
+        const { questions = [], dynamicFields: _dynamicFields, ...pageData } = pageItem;
         const page: Page = await this.broker.call('pages.create', pageData);
         pageItem.id = page.id;
 
@@ -2869,11 +2870,11 @@ export default class SeedService extends moleculer.Service {
 
         for (const item of questions) {
           const {
-            options,
+            options: _options,
             id: excelId,
-            nextQuestion,
-            condition,
-            dynamicFields,
+            nextQuestion: _nextQuestion,
+            condition: _condition,
+            dynamicFields: _questionDynamicFields,
             ...questionData
           } = item;
 
@@ -2978,10 +2979,10 @@ export default class SeedService extends moleculer.Service {
                     c.value !== undefined
                       ? c.value
                       : c.valueIndex !== undefined
-                      ? questionByExcelId[c.question].options[c.valueIndex].id
-                      : questionByExcelId[c.question].options.find(
+                      ? questionByExcelId[c.question].options?.[c.valueIndex]?.id
+                      : questionByExcelId[c.question].options?.find(
                           (o) => o.nextQuestion === questionByExcelId[excelId].id,
-                        ).id,
+                        )?.id,
                 }))
               : [],
             dynamicFields: dynamicFields?.map((df) => {

@@ -16,7 +16,6 @@ import {
   FieldHookCallback,
 } from '../types';
 import { Page } from './pages.service';
-import { QuestionOption } from './questionOptions.service';
 import { MetaSession, RestrictionType } from './api.service';
 
 interface Fields extends CommonFields {
@@ -42,6 +41,18 @@ export interface TraverseGraphResponse {
   questions: Array<Question['id']>;
   nextPageQuestions: Array<Question['id']>;
   page: Page['id'];
+}
+
+interface ResponseHookContext {
+  actions: {
+    traverseQuestionsGraph(params: {
+      startingQuestions: Array<Question['id']>;
+      values?: Response['values'];
+      skipAuthQuestions?: boolean;
+      skipAnonQuestions?: boolean;
+    }): Promise<TraverseGraphResponse>;
+  };
+  resolveEntities<T = any>(ctx: Context, params: unknown): Promise<T>;
 }
 
 export type Response<
@@ -81,18 +92,22 @@ export type Response<
         columnType: 'integer',
         columnName: 'pageId',
         required: true,
-        populate(ctx: Context, _values: any, responses: any[]) {
+        populate(this: ResponseHookContext, ctx: Context, _values: any, responses: any[]) {
           return Promise.all(
             responses.map(async (response) => {
-              let { dynamicFields, ...page }: Page = await ctx.call('pages.resolve', {
+              const { dynamicFields, ...resolvedPage }: Page = await ctx.call('pages.resolve', {
                 id: response.pageId,
               });
+              let page = resolvedPage;
 
               if (dynamicFields) {
-                const { values: prevValues } = await this.resolveEntities(ctx, {
-                  id: response.id,
-                  fields: 'values',
-                });
+                const { values: prevValues } = await this.resolveEntities<Pick<Response, 'values'>>(
+                  ctx,
+                  {
+                    id: response.id,
+                    fields: 'values',
+                  },
+                );
 
                 dynamicFields.forEach((df) => {
                   if (prevValues[df.condition.question] === df.condition.value) {
@@ -122,7 +137,7 @@ export type Response<
       questions: {
         type: 'array',
         items: 'number',
-        populate(ctx: Context, _values: any, responses: any[]) {
+        populate(this: ResponseHookContext, ctx: Context, _values: any, responses: any[]) {
           return Promise.all(
             responses.map(async (response) => {
               const questions: Question<'options'>[] = await ctx.call('questions.resolve', {
@@ -130,10 +145,13 @@ export type Response<
                 populate: 'options',
               });
 
-              const { values: prevValues } = await this.resolveEntities(ctx, {
-                id: response.id,
-                fields: 'values',
-              });
+              const { values: prevValues } = await this.resolveEntities<Pick<Response, 'values'>>(
+                ctx,
+                {
+                  id: response.id,
+                  fields: 'values',
+                },
+              );
 
               return questions
                 .map(({ dynamicFields, ...question }) => {
@@ -183,12 +201,15 @@ export type Response<
               {},
             );
         },
-        async get({ ctx, entity, value }: FieldHookCallback) {
+        async get(this: ResponseHookContext, { ctx, entity, value }: FieldHookCallback) {
           if (entity.previousResponseId) {
-            const { values: prevValues } = await this.resolveEntities(ctx, {
-              id: entity.previousResponseId,
-              fields: 'values',
-            });
+            const { values: prevValues } = await this.resolveEntities<Pick<Response, 'values'>>(
+              ctx,
+              {
+                id: entity.previousResponseId,
+                fields: 'values',
+              },
+            );
 
             return {
               ...prevValues,
@@ -254,13 +275,16 @@ export type Response<
           current: 'number',
           total: 'number',
         },
-        async set({ ctx, params }: { ctx: Context; params: Partial<Response> }) {
+        async set(
+          this: ResponseHookContext,
+          { ctx, params }: { ctx: Context; params: Partial<Response> },
+        ) {
           let skipAuthQuestions = false;
           let skipAnonQuestions = false;
-          let sessionId: Session['id'] = params.session;
+          let sessionId: Session['id'] | undefined = params.session;
 
           if (!sessionId && params.id) {
-            const entity: Response = await this.resolveEntities(ctx, { id: params.id });
+            const entity: Response = await this.resolveEntities<Response>(ctx, { id: params.id });
             sessionId = entity.session;
           }
 
@@ -363,7 +387,7 @@ export default class ResponsesService extends moleculer.Service {
           ? question.condition
           : question.condition
           ? [question.condition]
-          : null;
+          : [];
 
         if (question.required && (!conditions.length || this.checkConditions(conditions, values))) {
           errors[question.id] = 'REQUIRED';
@@ -372,14 +396,12 @@ export default class ResponsesService extends moleculer.Service {
         continue;
       }
 
-      let option: QuestionOption;
-
       switch (question.type) {
         case QuestionType.RADIO:
         case QuestionType.INFOCARD:
-        // case QuestionType.ADDRESS:
-        case QuestionType.SELECT:
-          option = question.options.find((o) => o.id === value);
+        // fall through
+        case QuestionType.SELECT: {
+          const option = question.options.find((o) => o.id === value);
 
           if (!option) {
             errors[question.id] = 'OPTION: ' + question.options.map((o) => o.id).join(', ');
@@ -387,6 +409,7 @@ export default class ResponsesService extends moleculer.Service {
           }
 
           break;
+        }
 
         case QuestionType.CHECKBOX:
           if (typeof value !== 'boolean') {
@@ -400,7 +423,7 @@ export default class ResponsesService extends moleculer.Service {
             errors[question.id] = 'ARRAY: ' + question.options.map((o) => o.id).join(', ');
           } else {
             for (const item of value) {
-              option = question.options.find((o) => o.id === item);
+              const option = question.options.find((o) => o.id === item);
 
               if (!option) {
                 errors[question.id] = 'OPTION: ' + question.options.map((o) => o.id).join(', ');
@@ -426,6 +449,10 @@ export default class ResponsesService extends moleculer.Service {
               if (!item.id) {
                 warnings[question.id] = 'Invalid file format';
                 continue;
+              }
+              if (!this.broker.cacher) {
+                errors[question.id] = 'File upload cache is not configured';
+                break;
               }
               const fileMeta = await this.broker.cacher.get(`uploaded-file:${item.id}`);
 
@@ -484,7 +511,7 @@ export default class ResponsesService extends moleculer.Service {
     });
 
     let questions: Array<Question['id']> = [];
-    let page: Page['id'];
+    let page: Page['id'] | undefined;
 
     if (nextPageQuestions.length) {
       ({ questions, page } = await this.actions.traverseQuestionsGraph({
@@ -680,7 +707,7 @@ export default class ResponsesService extends moleculer.Service {
       questions: [...questions].sort((a, b) => {
         const aQuestion = localQuestions.find((q) => q.id === a);
         const bQuestion = localQuestions.find((q) => q.id === b);
-        return bQuestion.priority - aQuestion.priority;
+        return (bQuestion?.priority || 0) - (aQuestion?.priority || 0);
       }),
       nextPageQuestions: [...nextPageQuestions],
     };

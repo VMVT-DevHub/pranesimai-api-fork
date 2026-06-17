@@ -204,21 +204,23 @@ const brokerConfig: BrokerOptions = {
           defaultTags: null,
         },
       },
-      process.env.NODE_ENV === 'local'
-        ? {
-            type: 'Console', // Console exporter is only for development!
-            options: {
-              // Custom logger
-              logger: null,
-              // Using colors
-              colors: true,
-              // Width of row
-              width: 100,
-              // Gauge width in the row
-              gaugeWidth: 40,
+      ...(process.env.NODE_ENV === 'local'
+        ? [
+            {
+              type: 'Console', // Console exporter is only for development!
+              options: {
+                // Custom logger
+                logger: null,
+                // Using colors
+                colors: true,
+                // Width of row
+                width: 100,
+                // Gauge width in the row
+                gaugeWidth: 40,
+              },
             },
-          }
-        : null,
+          ]
+        : []),
     ],
   },
 
