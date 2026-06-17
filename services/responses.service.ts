@@ -359,12 +359,13 @@ export default class ResponsesService extends moleculer.Service {
       const value = values[question.id];
 
       if (!value) {
-        if (
-          question.required &&
-          (!question.condition ||
-            values[question.condition.question] === question.condition.value ||
-            values[question.condition.question]?.includes?.(question.condition.value))
-        ) {
+        const conditions = Array.isArray(question.condition)
+          ? question.condition
+          : question.condition
+          ? [question.condition]
+          : null;
+
+        if (question.required && (!conditions.length || this.checkConditions(conditions, values))) {
           errors[question.id] = 'REQUIRED';
         }
 
@@ -375,6 +376,8 @@ export default class ResponsesService extends moleculer.Service {
 
       switch (question.type) {
         case QuestionType.RADIO:
+        case QuestionType.INFOCARD:
+        // case QuestionType.ADDRESS:
         case QuestionType.SELECT:
           option = question.options.find((o) => o.id === value);
 
@@ -412,43 +415,10 @@ export default class ResponsesService extends moleculer.Service {
           if (!Array.isArray(value)) {
             errors[question.id] = 'FILES must be array';
           } else {
-            const resolvedFiles = [];
-
             for (const item of value) {
-              if (item.url && item.name && item.size) {
-                resolvedFiles.push(item);
-                continue;
+              if (!item.url) {
+                errors[question.id] = 'FILES item must have url property';
               }
-
-              if (!item.id) {
-                warnings[question.id] = 'Invalid file format';
-                continue;
-              }
-              const fileMeta = await this.broker.cacher.get(`uploaded-file:${item.id}`);
-
-              if (!fileMeta) {
-                warnings[question.id] = 'Invalid or expired file ID';
-                continue;
-              }
-
-              const url = await ctx.call('files.getUrl', {
-                objectName: fileMeta.objectName,
-                bucketName: fileMeta.bucketName,
-              });
-
-              resolvedFiles.push({
-                url,
-                name: fileMeta.filename,
-                size: fileMeta.size,
-              });
-
-              // await this.broker.cacher.del(`uploaded-file:${item.id}`);
-            }
-
-            if (question.required && resolvedFiles.length === 0) {
-              warnings[question.id] = 'At least one valid file is required';
-            } else {
-              values[question.id] = resolvedFiles;
             }
           }
           break;
@@ -621,19 +591,19 @@ export default class ResponsesService extends moleculer.Service {
     const questions = new Set<Question['id']>();
     const nextPageQuestions = new Set<Question['id']>();
 
-    function handle(questionId?: Question['id']) {
+    const handle = (questionId?: Question['id']) => {
       if (!questionId) return;
 
       const local = localQuestions.find((q) => q.id === questionId);
 
       // skip question if conditional and does not satisfy condition (only when values provided)
-      if (
-        values &&
-        local &&
-        local.condition &&
-        values[local.condition.question] !== local.condition.value
-      )
-        return;
+      if (values && local && local.condition) {
+        const conditions = Array.isArray(local.condition) ? local.condition : [local.condition];
+
+        if (!this.checkConditions(conditions, values)) {
+          return;
+        }
+      }
 
       if (local) {
         questions.add(questionId);
@@ -647,6 +617,7 @@ export default class ResponsesService extends moleculer.Service {
             QuestionType.SELECT,
             QuestionType.MULTISELECT,
             QuestionType.RADIO,
+            QuestionType.INFOCARD,
             QuestionType.ADDRESS,
           ].includes(local.type)
         ) {
@@ -668,7 +639,7 @@ export default class ResponsesService extends moleculer.Service {
       } else {
         nextPageQuestions.add(questionId);
       }
-    }
+    };
 
     startingQuestions.forEach(handle);
 
@@ -680,6 +651,15 @@ export default class ResponsesService extends moleculer.Service {
       }),
       nextPageQuestions: [...nextPageQuestions],
     };
+  }
+  @Method
+  checkConditions(conditions: any[], values: Record<string | number, any>): boolean {
+    if (!conditions || conditions.length === 0) return true;
+
+    return conditions.every((condition) => {
+      const responseValue = values[condition.question];
+      return responseValue === condition.value || responseValue?.includes?.(condition.value);
+    });
   }
 
   @Method
