@@ -13,6 +13,7 @@ import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
   COMMON_SCOPES,
+  SESSION_MAX_AGE_SECONDS,
   Table,
   ResponseHeadersMeta,
 } from '../types';
@@ -80,6 +81,7 @@ export type Session<
 
       token: {
         type: 'string',
+        hidden: 'byDefault',
       },
 
       auth: 'boolean',
@@ -94,9 +96,18 @@ export type Session<
 
     scopes: {
       ...COMMON_SCOPES,
+
+      async session(q: any, ctx: Context<unknown, MetaSession>) {
+        if (!ctx?.meta?.session) return q;
+
+        return {
+          ...q,
+          id: ctx.meta.session.id,
+        };
+      },
     },
 
-    defaultScopes: [...COMMON_DEFAULT_SCOPES],
+    defaultScopes: [...COMMON_DEFAULT_SCOPES, 'session'],
   },
 })
 export default class SessionsService extends moleculer.Service {
@@ -115,16 +126,20 @@ export default class SessionsService extends moleculer.Service {
       auth: 'boolean|convert|optional',
     },
   })
-  async start(ctx: Context<{ survey: Survey['id']; auth?: boolean }, ResponseHeadersMeta>) {
+  async start(
+    ctx: Context<{ survey: Survey['id']; auth?: boolean }, ResponseHeadersMeta & MetaSession>,
+  ) {
     const survey: Survey = await ctx.call('surveys.resolve', {
       id: ctx.params.survey,
       throwIfNotExist: true,
     });
 
-    if (
+    const shouldRequireAuth =
       survey.authType === SurveyAuthType.REQUIRED ||
-      (survey.authType === SurveyAuthType.OPTIONAL && ctx.params.auth)
-    ) {
+      (survey.authType === SurveyAuthType.OPTIONAL &&
+        (ctx.params.auth || ctx.meta.isExternalRequest));
+
+    if (shouldRequireAuth) {
       const response: {
         ticket: string;
         host: string;
@@ -192,10 +207,12 @@ export default class SessionsService extends moleculer.Service {
       {
         startingQuestions: survey.firstPage.questions.map((q) => q.id),
         skipAuthQuestions: !auth,
+        skipAnonQuestions: auth,
       },
     );
 
     let session: Session;
+    let token: string | undefined;
 
     if (ctx.meta.session?.id) {
       session = await this.updateEntity(ctx, {
@@ -206,22 +223,22 @@ export default class SessionsService extends moleculer.Service {
         phone,
       });
     } else {
+      token = crypto.randomBytes(64).toString('hex');
       session = await this.createEntity(ctx, {
         survey: survey.id,
         auth,
         email,
         phone,
-        token: crypto.randomBytes(64).toString('hex'),
+        token,
       });
+      ctx.meta.$responseHeaders = {
+        'Set-Cookie': cookie.serialize('vmvt-session-token', token, {
+          path: '/',
+          httpOnly: true,
+          maxAge: SESSION_MAX_AGE_SECONDS,
+        }),
+      };
     }
-
-    ctx.meta.$responseHeaders = {
-      'Set-Cookie': cookie.serialize('vmvt-session-token', session.token, {
-        path: '/',
-        httpOnly: true,
-        maxAge: 60 * 30, // 30 mins
-      }),
-    };
 
     let lastResponse: Response = await ctx.call('responses.findOne', {
       query: {
@@ -290,5 +307,20 @@ export default class SessionsService extends moleculer.Service {
         maxAge: 0,
       }),
     };
+  }
+
+  @Method
+  async checkScopeAuthority(
+    _ctx: Context<unknown, MetaSession>,
+    scopeName: string,
+    operation: 'add' | 'remove',
+  ) {
+    if (scopeName === 'session') {
+      if (operation === 'remove') {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

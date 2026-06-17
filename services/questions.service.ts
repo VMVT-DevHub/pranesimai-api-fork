@@ -61,6 +61,7 @@ interface Fields extends CommonFields {
   requiresAuth?: string;
   description?: string;
   nextQuestion?: Question['id'];
+  anonOnly?: boolean;
   authRelation?: AuthRelation;
   condition?: {
     question: Question['id'];
@@ -139,6 +140,10 @@ export type Question<
       authRelation: {
         type: 'string',
         enum: Object.values(AuthRelation),
+      },
+
+      anonOnly: {
+        type: 'boolean',
       },
 
       title: 'string',

@@ -13,6 +13,8 @@ export enum UserType {
   USER = 'USER',
 }
 
+export const SESSION_MAX_AGE_SECONDS = 60 * 30;
+
 export function queryBoolean(field: string, value: boolean = false) {
   let fieldValue = `${_.snakeCase(field)} IS`;
   if (!value) {

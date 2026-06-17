@@ -15,6 +15,7 @@ import {
 } from '../types';
 import { Page } from './pages.service';
 import { Question } from './questions.service';
+import { MetaSession } from './api.service';
 
 export enum SurveyAuthType {
   OPTIONAL = 'OPTIONAL',
@@ -114,10 +115,19 @@ export default class SurveysService extends moleculer.Service {
   @Action({
     rest: 'GET /',
   })
-  async getAll(ctx: Context) {
-    return this.findEntities(ctx, {
+  async getAll(ctx: Context<unknown, MetaSession>) {
+    const surveys: Survey[] = await this.findEntities(ctx, {
       sort: '-priority',
     });
+
+    return surveys.map((survey) =>
+      survey.authType === SurveyAuthType.OPTIONAL
+        ? {
+            ...survey,
+            anonymousAuthAvailable: !ctx.meta.isExternalRequest,
+          }
+        : survey,
+    );
   }
 
   @Method

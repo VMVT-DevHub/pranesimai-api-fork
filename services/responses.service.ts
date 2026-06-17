@@ -227,7 +227,7 @@ export type Response<
               for (const qId of params.questions) {
                 const question = page.questions.find((q) => q.id === qId);
 
-                if (question.authRelation) {
+                if (question?.authRelation) {
                   if (question.authRelation) {
                     switch (question.authRelation) {
                       case AuthRelation.EMAIL:
@@ -256,6 +256,7 @@ export type Response<
         },
         async set({ ctx, params }: { ctx: Context; params: Partial<Response> }) {
           let skipAuthQuestions = false;
+          let skipAnonQuestions = false;
           let sessionId: Session['id'] = params.session;
 
           if (!sessionId && params.id) {
@@ -266,6 +267,7 @@ export type Response<
           if (sessionId) {
             const session: Session = await ctx.call('sessions.resolve', { id: sessionId });
             skipAuthQuestions = !session.auth;
+            skipAnonQuestions = session.auth;
           }
 
           if (params.questions) {
@@ -288,6 +290,7 @@ export type Response<
                 await this.actions.traverseQuestionsGraph({
                   startingQuestions,
                   skipAuthQuestions,
+                  skipAnonQuestions,
                 });
 
               startingQuestions = nextPageQuestions;
@@ -350,6 +353,7 @@ export default class ResponsesService extends moleculer.Service {
 
     const { values } = ctx.params;
     const errors: Record<string | number, string> = {};
+    const warnings: Record<string | number, string> = {};
 
     for (const question of response.questions) {
       const value = values[question.id];
@@ -412,12 +416,42 @@ export default class ResponsesService extends moleculer.Service {
             errors[question.id] = 'FILES must be array';
           } else {
             for (const item of value) {
-              if (!item.url) {
-                errors[question.id] = 'FILES item must have url property';
+              if (item.url && item.name && item.size) {
+                resolvedFiles.push(item);
+                continue;
               }
+
+              if (!item.id) {
+                warnings[question.id] = 'Invalid file format';
+                continue;
+              }
+              const fileMeta = await this.broker.cacher.get(`uploaded-file:${item.id}`);
+
+              if (!fileMeta) {
+                warnings[question.id] = 'Invalid or expired file ID';
+                continue;
+              }
+
+              const url = await ctx.call('files.getUrl', {
+                objectName: fileMeta.objectName,
+                bucketName: fileMeta.bucketName,
+              });
+
+              resolvedFiles.push({
+                url,
+                name: fileMeta.filename,
+                size: fileMeta.size,
+              });
+
+              // await this.broker.cacher.del(`uploaded-file:${item.id}`);
+            }
+
+            if (question.required && resolvedFiles.length === 0) {
+              warnings[question.id] = 'At least one valid file is required';
+            } else {
+              values[question.id] = resolvedFiles;
             }
           }
-
           break;
 
         case QuestionType.EMAIL:
@@ -454,6 +488,7 @@ export default class ResponsesService extends moleculer.Service {
       ({ questions, page } = await this.actions.traverseQuestionsGraph({
         startingQuestions: nextPageQuestions,
         skipAuthQuestions: !response.session.auth,
+        skipAnonQuestions: response.session.auth,
       }));
     }
 
@@ -519,6 +554,7 @@ export default class ResponsesService extends moleculer.Service {
       },
       values: 'object|optional',
       skipAuthQuestions: 'boolean|optional',
+      skipAnonQuestions: 'boolean|optional',
     },
   })
   async traverseQuestionsGraph(
@@ -526,9 +562,10 @@ export default class ResponsesService extends moleculer.Service {
       startingQuestions: Array<Question['id']>;
       values?: Response['values'];
       skipAuthQuestions?: boolean;
+      skipAnonQuestions?: boolean;
     }>,
   ) {
-    const { startingQuestions, values, skipAuthQuestions } = ctx.params;
+    const { startingQuestions, values, skipAuthQuestions, skipAnonQuestions } = ctx.params;
 
     // startingQuestions should be from the same page, we do not handle cases when it's not
     const question: Question = await ctx.call('questions.resolve', { id: startingQuestions[0] });
@@ -554,11 +591,22 @@ export default class ResponsesService extends moleculer.Service {
       });
     }
 
+    if (skipAnonQuestions) {
+      questions = questions.filter((questionId) => {
+        const question = page.questions.find((q) => q.id === questionId);
+
+        if (!question) return false;
+        if (question.anonOnly) return false;
+        return true;
+      });
+    }
+
     if (!questions.length && nextPageQuestions.length) {
       return this.actions.traverseQuestionsGraph({
         startingQuestions: nextPageQuestions,
         values,
         skipAuthQuestions,
+        skipAnonQuestions,
       });
     }
 

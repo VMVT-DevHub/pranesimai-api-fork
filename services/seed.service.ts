@@ -41,6 +41,7 @@ type SurveyTemplate = {
       description?: Question['description'];
       required: Question['required'];
       riskEvaluation: Question['riskEvaluation'];
+      anonOnly?: Question['anonOnly'];
       authRelation?: Question['authRelation'];
       condition?: {
         question: number | string; // excel id
@@ -87,7 +88,7 @@ const q = (
 
 type TypeFactory = (
   id: number | string,
-  nextQuestion: number | string,
+  nextQuestion: number | string | undefined,
   title: Question['title'],
   fields?: Partial<SurveyTemplateQuestion>,
 ) => SurveyTemplateQuestion;
@@ -153,10 +154,42 @@ const helperVeiklos = (id: number | string, idOut: number | string, qa: Question
     spField: 'Koordinates',
     ...qa,
   }),
-  q.input(`${id}.2`, idOut, 'Pateikite nuoroda į internetinės prekybos puslapį', {
+  q.input(`${id}.2`, idOut, 'Pateikite nuorodą į internetinės prekybos puslapį', {
     condition: c(id),
     spField: 'PapInfo',
     ...qa,
+  }),
+  q.input(`${id}.3`, idOut, 'Pateikite nuorodą į socialinius interneto tinklus', {
+    condition: c(id),
+    spField: 'pap_info',
+    ...qa,
+  }),
+];
+const Identifikacija = (id: number, idOut: number | string) => [
+  q.checkbox(
+    id,
+    id + 1,
+    'Atliktas papildomas tapatybės patvirtinimas. Tapatybė patvirtinta pagal pateiktą asmens tapatybės dokumentą. Dokumento kopija nesaugoma',
+    {
+      riskEvaluation: false,
+      spField: 'tapatybe',
+      required: false,
+      anonOnly: true,
+    },
+  ),
+  q.select(id + 1, idOut, 'Tapatybę identifikavęs darbuotojas', {
+    riskEvaluation: false,
+    spField: 'darbuot',
+    options: o([
+      '-',
+      'Zigmantė Geštautienė',
+      'Vitalija Valiūnienė',
+      'Neringa Price',
+      'Nomeda Kregždienė',
+      'Giedrė Stasiulienė',
+    ]),
+    required: false,
+    anonOnly: true,
   }),
 ];
 
@@ -379,7 +412,11 @@ const SURVEYS_SEED: SurveyTemplate[] = [
     authType: SurveyAuthType.OPTIONAL,
     pages: [
       // =======================================
-      pages.kontaktiniai(3),
+      pages.kontaktiniai(1),
+      {
+        title: 'Identifikacija',
+        questions: [...Identifikacija(2, 4)],
+      },
 
       // =======================================
       {
@@ -1519,7 +1556,12 @@ const SURVEYS_SEED: SurveyTemplate[] = [
     authType: SurveyAuthType.OPTIONAL,
     pages: [
       // =======================================
-      pages.kontaktiniai(3),
+
+      pages.kontaktiniai(1),
+      {
+        title: 'Identifikacija',
+        questions: [...Identifikacija(2, 4)],
+      },
 
       // =======================================
       {
@@ -2815,7 +2857,7 @@ export default class SeedService extends moleculer.Service {
     for (const surveyItem of surveys) {
       const { pages, ...surveyData } = surveyItem;
       const questionByExcelId: Record<string, Partial<Question<'options'>>> = {};
-      let firstPage: Page['id'];
+      let firstPage: Page['id'] | undefined;
 
       // 1 - first step: create pages with partial questions
       for (const pageItem of pages) {
@@ -2863,7 +2905,10 @@ export default class SeedService extends moleculer.Service {
                 value:
                   df.condition.value !== undefined
                     ? df.condition.value
-                    : questionByExcelId[df.condition.question].options[df.condition.valueIndex].id,
+                    : df.condition.valueIndex !== undefined
+                    ? questionByExcelId[df.condition.question].options?.[df.condition.valueIndex]
+                        ?.id
+                    : undefined,
               },
               values: df.values,
             })),
@@ -2957,8 +3002,10 @@ export default class SeedService extends moleculer.Service {
                   value:
                     df.condition.value !== undefined
                       ? df.condition.value
-                      : questionByExcelId[df.condition.question].options[df.condition.valueIndex]
-                          .id,
+                      : df.condition.valueIndex !== undefined
+                      ? questionByExcelId[df.condition.question].options?.[df.condition.valueIndex]
+                          ?.id
+                      : undefined,
                 },
                 values,
               };
