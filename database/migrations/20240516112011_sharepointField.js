@@ -1,4 +1,4 @@
-const { commonFields, schema } = require('../common');
+const { schema } = require('../common');
 
 /**
  * @param { import("knex").Knex } knex

@@ -161,12 +161,16 @@ export default class ReportsService extends moleculer.Service {
           switch (question.type) {
             case QuestionType.RADIO:
             case QuestionType.INFOCARD:
-            case QuestionType.SELECT:
-              // case QuestionType.ADDRESS:
+            case QuestionType.SELECT: // case QuestionType.ADDRESS:
+            {
               const option = question.options.find((o) => o.id === value);
+              if (!option) {
+                continue;
+              }
               answer = option.title;
 
               break;
+            }
 
             case QuestionType.MULTISELECT:
               answer = [];
@@ -176,6 +180,9 @@ export default class ReportsService extends moleculer.Service {
 
               for (const item of value) {
                 const option = question.options.find((o) => o.id === item);
+                if (!option) {
+                  continue;
+                }
                 answer.push(option.title);
               }
 

@@ -1,11 +1,10 @@
 import cookie from 'cookie';
-import moleculer, { Context, Errors } from 'moleculer';
+import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
 import ApiGateway, { IncomingRequest, Route } from 'moleculer-web';
 import { EndpointType, ResponseHeadersMeta, SESSION_MAX_AGE_SECONDS } from '../types';
 import { ServerResponse } from 'http';
 import { Session } from './sessions.service';
-import { Survey } from './surveys.service';
 
 export interface MetaSession {
   session?: Session;
@@ -206,7 +205,7 @@ export default class ApiService extends moleculer.Service {
     err: any,
   ) {
     if (!this.shouldSanitizeErrors()) {
-      return ApiGateway.methods.sendError.call(this, req, res, err);
+      return ApiGateway.methods!.sendError.call(this, req, res, err);
     }
 
     if (req.$next) {
@@ -223,7 +222,7 @@ export default class ApiService extends moleculer.Service {
       Object.keys(responseHeaders).forEach((key) => {
         try {
           res.setHeader(key, responseHeaders[key]);
-        } catch (_error) {
+        } catch {
           res.setHeader(key, encodeURI(responseHeaders[key]));
         }
       });

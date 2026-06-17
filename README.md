@@ -52,6 +52,30 @@ To get started with the Pranešimai API, follow the instructions below.
 
 The API will be available at `http://localhost:3000`.
 
+### Development tooling
+
+Recommended VS Code extensions:
+
+- ESLint (`dbaeumer.vscode-eslint`)
+
+This workspace includes `.vscode/settings.json` so VS Code uses the repo TypeScript SDK and ESLint flat config. If
+Problems look stale after dependency or config changes, run `Developer: Reload Window`.
+
+Useful checks:
+
+```bash
+yarn run lint
+yarn run lint:fix
+yarn run typecheck
+yarn run validate
+yarn run build
+```
+
+Git hooks:
+
+- Pre-commit runs `lint-staged` on staged files.
+- Pre-push runs `yarn run validate` on the full project.
+
 ## Deployment
 
 ### Production
