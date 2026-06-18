@@ -22,6 +22,7 @@ import { MetaSession, RestrictionType } from './api.service';
 
 interface Fields extends CommonFields {
   token: string;
+  userId: string;
   survey: Survey['id'];
   lastResponse: Response['id'];
   finishedAt: Date;
@@ -84,6 +85,7 @@ export type Session<
         hidden: 'byDefault',
       },
 
+      userId: 'string',
       auth: 'boolean',
       email: 'string',
       phone: 'string',
@@ -172,12 +174,11 @@ export default class SessionsService extends moleculer.Service {
     const { ticket, customData } = ctx.params;
     const { survey }: { survey: Survey['id'] } = JSON.parse(customData);
 
-    const {
-      email,
-      phoneNumber: phone,
-    }: {
+    const viispData: {
+      id?: string;
       email: string;
-      phoneNumber: string;
+      phone?: string;
+      phoneNumber?: string;
     } = await ctx.call('http.get', {
       url: `${process.env.VIISP_HOST}/data?ticket=${ticket}`,
       opt: {
@@ -185,7 +186,10 @@ export default class SessionsService extends moleculer.Service {
       },
     });
 
-    await this.startSurvey(ctx, survey, true, email, phone);
+    const { id: userId, email } = viispData;
+    const phone = viispData.phone || viispData.phoneNumber;
+
+    await this.startSurvey(ctx, survey, true, email, phone, userId);
   }
 
   @Method
@@ -195,6 +199,7 @@ export default class SessionsService extends moleculer.Service {
     auth: Session['auth'],
     email?: Session['email'],
     phone?: Session['phone'],
+    userId?: Session['userId'],
   ) {
     const survey: Survey<'firstPage'> = await ctx.call('surveys.resolve', {
       id: id,
@@ -221,6 +226,7 @@ export default class SessionsService extends moleculer.Service {
         auth,
         email,
         phone,
+        userId,
       });
     } else {
       token = crypto.randomBytes(64).toString('hex');
@@ -229,6 +235,7 @@ export default class SessionsService extends moleculer.Service {
         auth,
         email,
         phone,
+        userId,
         token,
       });
       ctx.meta.$responseHeaders = {
@@ -302,6 +309,24 @@ export default class SessionsService extends moleculer.Service {
     this.removeCookie(ctx);
   }
 
+  @Action({
+    auth: RestrictionType.SESSION,
+  })
+  async userHistory(ctx: Context<unknown, MetaSession>) {
+    if (!ctx.meta.session?.auth || !ctx.meta.session.userId) {
+      return [];
+    }
+
+    return this.findEntities(ctx, {
+      query: {
+        userId: ctx.meta.session.userId,
+      },
+      populate: 'survey',
+      scope: '-session',
+      sort: '-updatedAt',
+    });
+  }
+
   @Method
   removeCookie(ctx: Context<unknown, ResponseHeadersMeta>) {
     ctx.meta.$responseHeaders = {
@@ -321,7 +346,7 @@ export default class SessionsService extends moleculer.Service {
   ) {
     if (scopeName === 'session') {
       if (operation === 'remove') {
-        return false;
+        return (_ctx as any).action?.name === 'sessions.userHistory';
       }
     }
 

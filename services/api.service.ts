@@ -49,6 +49,8 @@ export enum RestrictionType {
           'addresses.searchGat',
           'api.ping',
           'files.uploadFile',
+          'reports.getMy',
+          'reports.my',
           'responses.get',
           'responses.respond',
           'sessions.cancel',
