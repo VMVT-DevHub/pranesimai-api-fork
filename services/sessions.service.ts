@@ -19,6 +19,7 @@ import {
 } from '../types';
 import { Response, TraverseGraphResponse } from './responses.service';
 import { MetaSession, RestrictionType } from './api.service';
+import { AuthUser } from './auth.service';
 
 interface Fields extends CommonFields {
   token: string;
@@ -139,9 +140,9 @@ export default class SessionsService extends moleculer.Service {
     const shouldRequireAuth =
       survey.authType === SurveyAuthType.REQUIRED ||
       (survey.authType === SurveyAuthType.OPTIONAL &&
-        (ctx.params.auth || ctx.meta.isExternalRequest));
+        !!(ctx.params.auth || ctx.meta.isExternalRequest));
 
-    if (shouldRequireAuth) {
+    if (shouldRequireAuth && !ctx.meta.user) {
       const response: {
         ticket: string;
         host: string;
@@ -159,7 +160,14 @@ export default class SessionsService extends moleculer.Service {
       ctx.meta.$statusCode = 302;
       ctx.meta.$location = response.url;
     } else {
-      await this.startSurvey(ctx, survey.id, false);
+      await this.startSurvey(
+        ctx,
+        survey.id,
+        shouldRequireAuth,
+        ctx.meta.user?.email,
+        ctx.meta.user?.phone,
+        ctx.meta.user?.userId,
+      );
     }
   }
 
@@ -170,9 +178,10 @@ export default class SessionsService extends moleculer.Service {
       customData: 'string',
     },
   })
-  async evartai(ctx: Context<{ ticket: string; customData: string }>) {
+  async evartai(ctx: Context<{ ticket: string; customData: string }, ResponseHeadersMeta>) {
     const { ticket, customData } = ctx.params;
-    const { survey }: { survey: Survey['id'] } = JSON.parse(customData);
+    const data = customData ? JSON.parse(customData) : {};
+    const { survey }: { survey?: Survey['id'] } = data;
 
     const viispData: {
       id?: string;
@@ -189,7 +198,58 @@ export default class SessionsService extends moleculer.Service {
     const { id: userId, email } = viispData;
     const phone = viispData.phone || viispData.phoneNumber;
 
-    await this.startSurvey(ctx, survey, true, email, phone, userId);
+    if (!userId) {
+      throw new moleculer.Errors.MoleculerClientError(
+        'VIISP user id is required.',
+        400,
+        'VIISP_USER_ID_REQUIRED',
+      );
+    }
+
+    const user: AuthUser = {
+      userId,
+      email,
+      phone,
+    };
+
+    await ctx.call('auth.createUserSession', user);
+
+    if (survey) {
+      await this.startSurvey(ctx, survey, true, email, phone, userId);
+      return;
+    }
+
+    ctx.meta.$statusCode = 302;
+    ctx.meta.$location = process.env.FRONTEND_URL;
+  }
+
+  @Action({
+    params: {
+      survey: 'number|convert',
+      userId: 'string',
+      email: 'string|optional',
+      phone: 'string|optional',
+    },
+  })
+  async startAuthenticated(
+    ctx: Context<
+      {
+        survey: Survey['id'];
+        userId: AuthUser['userId'];
+        email?: AuthUser['email'];
+        phone?: AuthUser['phone'];
+      },
+      ResponseHeadersMeta & MetaSession
+    >,
+  ) {
+    await this.startSurvey(
+      ctx,
+      ctx.params.survey,
+      true,
+      ctx.params.email,
+      ctx.params.phone,
+      ctx.params.userId,
+    );
   }
 
   @Method
@@ -238,12 +298,19 @@ export default class SessionsService extends moleculer.Service {
         userId,
         token,
       });
+      const setCookie = cookie.serialize('vmvt-session-token', token, {
+        path: '/',
+        httpOnly: true,
+        maxAge: SESSION_MAX_AGE_SECONDS,
+      });
+      const existingSetCookie = ctx.meta.$responseHeaders?.['Set-Cookie'];
       ctx.meta.$responseHeaders = {
-        'Set-Cookie': cookie.serialize('vmvt-session-token', token, {
-          path: '/',
-          httpOnly: true,
-          maxAge: SESSION_MAX_AGE_SECONDS,
-        }),
+        ...ctx.meta.$responseHeaders,
+        'Set-Cookie': Array.isArray(existingSetCookie)
+          ? [...existingSetCookie, setCookie]
+          : existingSetCookie
+          ? [existingSetCookie, setCookie]
+          : setCookie,
       };
     }
 
@@ -310,16 +377,16 @@ export default class SessionsService extends moleculer.Service {
   }
 
   @Action({
-    auth: RestrictionType.SESSION,
+    auth: RestrictionType.USER,
   })
   async userHistory(ctx: Context<unknown, MetaSession>) {
-    if (!ctx.meta.session?.auth || !ctx.meta.session.userId) {
+    if (!ctx.meta.user?.userId) {
       return [];
     }
 
     return this.findEntities(ctx, {
       query: {
-        userId: ctx.meta.session.userId,
+        userId: ctx.meta.user.userId,
       },
       populate: 'survey',
       scope: '-session',
@@ -329,12 +396,19 @@ export default class SessionsService extends moleculer.Service {
 
   @Method
   removeCookie(ctx: Context<unknown, ResponseHeadersMeta>) {
+    const setCookie = cookie.serialize('vmvt-session-token', '', {
+      path: '/',
+      httpOnly: true,
+      maxAge: 0,
+    });
+    const existingSetCookie = ctx.meta.$responseHeaders?.['Set-Cookie'];
     ctx.meta.$responseHeaders = {
-      'Set-Cookie': cookie.serialize('vmvt-session-token', '', {
-        path: '/',
-        httpOnly: true,
-        maxAge: 0,
-      }),
+      ...ctx.meta.$responseHeaders,
+      'Set-Cookie': Array.isArray(existingSetCookie)
+        ? [...existingSetCookie, setCookie]
+        : existingSetCookie
+        ? [existingSetCookie, setCookie]
+        : setCookie,
     };
   }
 

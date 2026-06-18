@@ -7,6 +7,20 @@ const { schema } = require('../common');
 exports.up = function (knex) {
   return knex.schema
     .withSchema(schema)
+    .createTable('authTokens', (table) => {
+      table.increments('id');
+      table.string('tokenHash').notNullable();
+      table.uuid('userId').notNullable();
+      table.string('email');
+      table.string('phone');
+      table.timestamp('expiresAt').notNullable();
+      table.timestamp('createdAt');
+      table.timestamp('updatedAt');
+      table.timestamp('deletedAt');
+      table.index(['tokenHash']);
+      table.index(['userId']);
+      table.index(['expiresAt']);
+    })
     .alterTable('sessions', (table) => {
       table.uuid('userId');
       table.index(['userId']);
@@ -41,5 +55,6 @@ exports.down = function (knex) {
     .alterTable('sessions', (table) => {
       table.dropIndex(['userId']);
       table.dropColumn('userId');
-    });
+    })
+    .dropTable('authTokens');
 };

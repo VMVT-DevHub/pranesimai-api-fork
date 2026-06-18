@@ -130,11 +130,11 @@ export type Report<
 export default class ReportsService extends moleculer.Service {
   @Action({
     rest: 'GET /my',
-    auth: RestrictionType.SESSION,
+    auth: RestrictionType.USER,
   })
   async my(ctx: Context<unknown, MetaSession>) {
-    if (!ctx.meta.session?.auth || !ctx.meta.session.userId) {
-      throwUnauthorizedError('Authenticated user session is required.');
+    if (!ctx.meta.user?.userId) {
+      throwUnauthorizedError('Authenticated user is required.');
     }
 
     const sessions: Array<Session<'survey'>> = await ctx.call('sessions.userHistory');
@@ -188,14 +188,14 @@ export default class ReportsService extends moleculer.Service {
 
   @Action({
     rest: 'GET /my/:id',
-    auth: RestrictionType.SESSION,
+    auth: RestrictionType.USER,
     params: {
       id: 'number|convert',
     },
   })
   async getMy(ctx: Context<{ id: Report['id'] }, MetaSession>) {
-    if (!ctx.meta.session?.auth || !ctx.meta.session.userId) {
-      throwUnauthorizedError('Authenticated user session is required.');
+    if (!ctx.meta.user?.userId) {
+      throwUnauthorizedError('Authenticated user is required.');
     }
 
     const sessions: Array<Session> = await ctx.call('sessions.userHistory');
@@ -300,7 +300,8 @@ export default class ReportsService extends moleculer.Service {
           switch (question.type) {
             case QuestionType.RADIO:
             case QuestionType.INFOCARD:
-            case QuestionType.SELECT: { // case QuestionType.ADDRESS:
+            case QuestionType.SELECT: {
+              // case QuestionType.ADDRESS:
               const option = question.options.find((o) => o.id === value);
               if (!option) {
                 continue;
