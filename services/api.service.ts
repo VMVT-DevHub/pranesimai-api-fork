@@ -5,15 +5,21 @@ import ApiGateway, { IncomingRequest, Route } from 'moleculer-web';
 import { EndpointType, ResponseHeadersMeta, SESSION_MAX_AGE_SECONDS } from '../types';
 import { ServerResponse } from 'http';
 import { Session } from './sessions.service';
+import type { AuthToken } from './auth.service';
+
+const USER_TOKEN_COOKIE = 'vmvt-user-token';
 
 export interface MetaSession {
   session?: Session;
+  user?: Pick<AuthToken, 'userId' | 'email' | 'phone'>;
+  userToken?: AuthToken;
   isExternalRequest?: boolean; // as opposed to internal VMVT network
 }
 
 export enum RestrictionType {
   PUBLIC = 'PUBLIC',
   SESSION = 'SESSION',
+  USER = 'USER',
 }
 
 @Service({
@@ -48,7 +54,13 @@ export enum RestrictionType {
           'addresses.findGyv',
           'addresses.searchGat',
           'api.ping',
+          'auth.current',
+          'auth.login',
+          'auth.logout',
+          'auth.start',
           'files.uploadFile',
+          'reports.getMy',
+          'reports.my',
           'responses.get',
           'responses.respond',
           'sessions.cancel',
@@ -138,6 +150,19 @@ export default class ApiService extends moleculer.Service {
     ctx.meta.isExternalRequest = this.isExternalRequest(req);
 
     const cookies = cookie.parse(req.headers.cookie || '');
+    const authToken: AuthToken = await ctx.call('auth.resolveToken', {
+      token: cookies[USER_TOKEN_COOKIE],
+    });
+
+    if (authToken) {
+      ctx.meta.userToken = authToken;
+      ctx.meta.user = {
+        userId: authToken.userId,
+        email: authToken.email,
+        phone: authToken.phone,
+      };
+    }
+
     if (!cookies['vmvt-session-token']) {
       return;
     }
@@ -185,6 +210,14 @@ export default class ApiService extends moleculer.Service {
     const restrictionType = this.getRestrictionType(req);
 
     if (restrictionType === RestrictionType.PUBLIC) {
+      return;
+    }
+
+    if (restrictionType === RestrictionType.USER) {
+      if (!ctx.meta.user) {
+        throw new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN, null);
+      }
+
       return;
     }
 

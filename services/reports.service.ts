@@ -1,7 +1,7 @@
 'use strict';
 
 import moleculer, { Context } from 'moleculer';
-import { Service, Event } from 'moleculer-decorators';
+import { Service, Event, Action } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 import { stringify } from 'csv-stringify/sync';
 
@@ -13,15 +13,30 @@ import {
   COMMON_SCOPES,
   Table,
 } from '../types';
+import { throwNotFoundError, throwUnauthorizedError } from '../types/errors';
+import { MetaSession, RestrictionType } from './api.service';
 import { Question, QuestionType } from './questions.service';
 import { Session } from './sessions.service';
 import { Response } from './responses.service';
 import { Survey, SurveyAuthType } from './surveys.service';
 
+export enum ReportStatus {
+  SUBMITTED = 'SUBMITTED',
+  IMPORTED = 'IMPORTED',
+  IN_REVIEW = 'IN_REVIEW',
+  DONE = 'DONE',
+  REJECTED = 'REJECTED',
+  FAILED = 'FAILED',
+}
+
 interface Fields extends CommonFields {
   session: Session['id'];
   survey: Survey['id'];
   spList: Survey['spList'];
+  status: ReportStatus;
+  externalId: string;
+  statusUpdatedAt: Date;
+  statusMessage: string;
   startedAt: Date;
   finishedAt: Date;
   auth: boolean;
@@ -86,6 +101,14 @@ export type Report<
       },
 
       spList: 'string',
+      status: {
+        type: 'string',
+        enum: Object.values(ReportStatus),
+        default: ReportStatus.SUBMITTED,
+      },
+      externalId: 'string',
+      statusUpdatedAt: 'date',
+      statusMessage: 'string',
       startedAt: 'date',
       finishedAt: 'date',
       auth: 'boolean',
@@ -105,6 +128,122 @@ export type Report<
   },
 })
 export default class ReportsService extends moleculer.Service {
+  @Action({
+    rest: 'GET /my',
+    auth: RestrictionType.USER,
+  })
+  async my(ctx: Context<unknown, MetaSession>) {
+    if (!ctx.meta.user?.userId) {
+      throwUnauthorizedError('Authenticated user is required.');
+    }
+
+    const sessions: Array<Session<'survey'>> = await ctx.call('sessions.userHistory');
+    const sessionIds = sessions.map((session) => session.id);
+
+    const reports: Array<Report<'survey'>> = sessionIds.length
+      ? await this.findEntities(ctx, {
+          query: {
+            session: { $in: sessionIds },
+          },
+          populate: 'survey',
+          sort: '-finishedAt',
+        })
+      : [];
+
+    const drafts = sessions
+      .filter((session) => !session.finishedAt && !session.canceledAt)
+      .map((session) => ({
+        type: 'draft',
+        id: session.id,
+        status: 'DRAFT',
+        survey: session.survey,
+        lastResponse: session.lastResponse,
+        createdAt: session.createdAt,
+        updatedAt: session.updatedAt,
+      }));
+
+    const reportItems = reports.map((report) => ({
+      type: 'report',
+      id: report.id,
+      session: report.session,
+      status: report.status,
+      externalId: report.externalId,
+      survey: report.survey,
+      startedAt: report.startedAt,
+      finishedAt: report.finishedAt,
+      statusUpdatedAt: report.statusUpdatedAt,
+      statusMessage: report.statusMessage,
+      createdAt: report.createdAt,
+      updatedAt: report.updatedAt,
+    }));
+
+    return {
+      items: [...drafts, ...reportItems].sort(
+        (a, b) =>
+          new Date(b.updatedAt || b.createdAt || 0).getTime() -
+          new Date(a.updatedAt || a.createdAt || 0).getTime(),
+      ),
+    };
+  }
+
+  @Action({
+    rest: 'GET /my/:id',
+    auth: RestrictionType.USER,
+    params: {
+      id: 'number|convert',
+    },
+  })
+  async getMy(ctx: Context<{ id: Report['id'] }, MetaSession>) {
+    if (!ctx.meta.user?.userId) {
+      throwUnauthorizedError('Authenticated user is required.');
+    }
+
+    const sessions: Array<Session> = await ctx.call('sessions.userHistory');
+    const sessionIds = sessions.map((session) => session.id);
+
+    const report: Report<'survey'> = await this.findEntity(ctx, {
+      query: {
+        id: ctx.params.id,
+        session: { $in: sessionIds },
+      },
+      populate: 'survey',
+    });
+
+    if (!report) {
+      throwNotFoundError('Report not found.');
+    }
+
+    return report;
+  }
+
+  @Action({
+    params: {
+      id: 'number|convert',
+      status: {
+        type: 'string',
+        enum: Object.values(ReportStatus),
+      },
+      externalId: 'string|optional',
+      statusMessage: 'string|optional',
+    },
+  })
+  async updateStatus(
+    ctx: Context<{
+      id: Report['id'];
+      status: ReportStatus;
+      externalId?: Report['externalId'];
+      statusMessage?: Report['statusMessage'];
+    }>,
+  ) {
+    return this.updateEntity(ctx, {
+      id: ctx.params.id,
+      status: ctx.params.status,
+      externalId: ctx.params.externalId,
+      statusMessage: ctx.params.statusMessage,
+      statusUpdatedAt: new Date(),
+    });
+  }
+
   @Event()
   async 'sessions.finished'(ctx: Context<Session>) {
     const session = ctx.params;
@@ -161,8 +300,8 @@ export default class ReportsService extends moleculer.Service {
           switch (question.type) {
             case QuestionType.RADIO:
             case QuestionType.INFOCARD:
-            case QuestionType.SELECT: // case QuestionType.ADDRESS:
-            {
+            case QuestionType.SELECT: {
+              // case QuestionType.ADDRESS:
               const option = question.options.find((o) => o.id === value);
               if (!option) {
                 continue;
@@ -235,6 +374,8 @@ export default class ReportsService extends moleculer.Service {
       session: session.id,
       survey: session.survey,
       spList: survey.spList,
+      status: ReportStatus.SUBMITTED,
+      statusUpdatedAt: session.finishedAt,
       startedAt: session.createdAt,
       finishedAt: session.finishedAt,
       auth: session.auth,
