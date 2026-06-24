@@ -14,6 +14,7 @@ import {
   ResponseHeadersMeta,
   Table,
 } from '../types';
+import { USER_TOKEN_COOKIE, USER_TOKEN_MAX_AGE_SECONDS } from '../types/auth';
 import { MetaSession, RestrictionType } from './api.service';
 
 export interface AuthUser {
@@ -31,9 +32,6 @@ export type AuthToken<
   P extends keyof CommonPopulates = never,
   F extends keyof Fields = keyof Fields,
 > = Table<Fields, CommonPopulates, P, F>;
-
-export const USER_TOKEN_COOKIE = 'vmvt-user-token';
-export const USER_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24;
 
 @Service({
   name: 'auth',
@@ -120,11 +118,12 @@ export default class AuthService extends moleculer.Service {
       );
     }
 
-    await ctx.call('auth.createUserSession', {
+    const { token } = await this.createUserSession(ctx, {
       userId,
       email,
       phone,
     });
+    this.setCookie(ctx, token);
 
     if (data.survey) {
       await ctx.call('sessions.startAuthenticated', {
@@ -163,21 +162,28 @@ export default class AuthService extends moleculer.Service {
     this.removeCookie(ctx);
   }
 
-  @Action()
-  async createUserSession(ctx: Context<AuthUser, ResponseHeadersMeta>) {
+  @Method
+  async createUserSession(ctx: Context, user: AuthUser) {
     const token = crypto.randomBytes(64).toString('hex');
     const expiresAt = new Date(Date.now() + USER_TOKEN_MAX_AGE_SECONDS * 1000);
 
     await this.createEntity(ctx, {
       tokenHash: this.hashToken(token),
-      userId: ctx.params.userId,
-      email: ctx.params.email,
-      phone: ctx.params.phone,
+      userId: user.userId,
+      email: user.email,
+      phone: user.phone,
       expiresAt,
     });
 
-    this.setCookie(ctx, token);
-    return ctx.params;
+    return {
+      ...user,
+      token,
+    };
+  }
+
+  @Action()
+  async createUserToken(ctx: Context<AuthUser>) {
+    return this.createUserSession(ctx, ctx.params);
   }
 
   @Action()
@@ -190,6 +196,7 @@ export default class AuthService extends moleculer.Service {
       query: {
         tokenHash: this.hashToken(ctx.params.token),
       },
+      fields: ['id', 'userId', 'email', 'phone', 'expiresAt'],
     });
 
     if (!authToken || new Date(authToken.expiresAt).getTime() < Date.now()) {

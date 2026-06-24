@@ -17,9 +17,10 @@ import {
   Table,
   ResponseHeadersMeta,
 } from '../types';
+import { SESSION_TOKEN_COOKIE, USER_TOKEN_COOKIE, USER_TOKEN_MAX_AGE_SECONDS } from '../types/auth';
 import { Response, TraverseGraphResponse } from './responses.service';
 import { MetaSession, RestrictionType } from './api.service';
-import { AuthUser } from './auth.service';
+import type { AuthUser } from './auth.service';
 
 interface Fields extends CommonFields {
   token: string;
@@ -212,7 +213,21 @@ export default class SessionsService extends moleculer.Service {
       phone,
     };
 
-    await ctx.call('auth.createUserSession', user);
+    const { token }: AuthUser & { token: string } = await ctx.call('auth.createUserToken', user);
+    const setUserCookie = cookie.serialize(USER_TOKEN_COOKIE, token, {
+      path: '/',
+      httpOnly: true,
+      maxAge: USER_TOKEN_MAX_AGE_SECONDS,
+    });
+    const existingSetCookie = ctx.meta.$responseHeaders?.['Set-Cookie'];
+    ctx.meta.$responseHeaders = {
+      ...ctx.meta.$responseHeaders,
+      'Set-Cookie': Array.isArray(existingSetCookie)
+        ? [...existingSetCookie, setUserCookie]
+        : existingSetCookie
+        ? [existingSetCookie, setUserCookie]
+        : setUserCookie,
+    };
 
     if (survey) {
       await this.startSurvey(ctx, survey, true, email, phone, userId);
@@ -298,7 +313,7 @@ export default class SessionsService extends moleculer.Service {
         userId,
         token,
       });
-      const setCookie = cookie.serialize('vmvt-session-token', token, {
+      const setCookie = cookie.serialize(SESSION_TOKEN_COOKIE, token, {
         path: '/',
         httpOnly: true,
         maxAge: SESSION_MAX_AGE_SECONDS,
@@ -396,7 +411,7 @@ export default class SessionsService extends moleculer.Service {
 
   @Method
   removeCookie(ctx: Context<unknown, ResponseHeadersMeta>) {
-    const setCookie = cookie.serialize('vmvt-session-token', '', {
+    const setCookie = cookie.serialize(SESSION_TOKEN_COOKIE, '', {
       path: '/',
       httpOnly: true,
       maxAge: 0,
