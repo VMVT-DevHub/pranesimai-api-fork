@@ -3,16 +3,14 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
 import ApiGateway, { IncomingRequest, Route } from 'moleculer-web';
 import { EndpointType, ResponseHeadersMeta, SESSION_MAX_AGE_SECONDS } from '../types';
+import { SESSION_TOKEN_COOKIE, USER_TOKEN_COOKIE } from '../types/auth';
 import { ServerResponse } from 'http';
 import { Session } from './sessions.service';
-import type { AuthToken } from './auth.service';
-
-const USER_TOKEN_COOKIE = 'vmvt-user-token';
+import type { AuthUser } from './auth.service';
 
 export interface MetaSession {
   session?: Session;
-  user?: Pick<AuthToken, 'userId' | 'email' | 'phone'>;
-  userToken?: AuthToken;
+  user?: AuthUser;
   isExternalRequest?: boolean; // as opposed to internal VMVT network
 }
 
@@ -150,45 +148,79 @@ export default class ApiService extends moleculer.Service {
     ctx.meta.isExternalRequest = this.isExternalRequest(req);
 
     const cookies = cookie.parse(req.headers.cookie || '');
-    const authToken: AuthToken = await ctx.call('auth.resolveToken', {
-      token: cookies[USER_TOKEN_COOKIE],
-    });
+    await this.authenticateUser(ctx, cookies[USER_TOKEN_COOKIE]);
+    await this.authenticateSession(ctx, cookies[SESSION_TOKEN_COOKIE]);
 
-    if (authToken) {
-      ctx.meta.userToken = authToken;
-      ctx.meta.user = {
-        userId: authToken.userId,
-        email: authToken.email,
-        phone: authToken.phone,
-      };
+    return ctx.meta.user;
+  }
+
+  @Method
+  async authenticateUser(ctx: Context<unknown, MetaSession & ResponseHeadersMeta>, token?: string) {
+    if (!token) {
+      return;
     }
 
-    if (!cookies['vmvt-session-token']) {
+    const authUser: AuthUser = await ctx.call('auth.resolveToken', {
+      token,
+    });
+
+    if (!authUser) {
+      this.clearCookie(ctx, USER_TOKEN_COOKIE);
+      return;
+    }
+
+    ctx.meta.user = authUser;
+  }
+
+  @Method
+  async authenticateSession(
+    ctx: Context<unknown, MetaSession & ResponseHeadersMeta>,
+    token?: string,
+  ) {
+    if (!token) {
       return;
     }
 
     const session: Session = await ctx.call('sessions.findOne', {
       query: {
-        token: cookies['vmvt-session-token'],
+        token,
       },
     });
 
     if (!session) {
+      this.clearCookie(ctx, SESSION_TOKEN_COOKIE);
       return;
     }
 
     if (this.isExpiredSession(session)) {
-      ctx.meta.$responseHeaders = {
-        'Set-Cookie': cookie.serialize('vmvt-session-token', '', {
-          path: '/',
-          httpOnly: true,
-          maxAge: 0,
-        }),
-      };
+      this.clearCookie(ctx, SESSION_TOKEN_COOKIE);
       return;
     }
 
     ctx.meta.session = session;
+  }
+
+  @Method
+  clearCookie(ctx: Context<unknown, ResponseHeadersMeta>, name: string) {
+    this.appendSetCookie(
+      ctx,
+      cookie.serialize(name, '', {
+        path: '/',
+        httpOnly: true,
+        maxAge: 0,
+      }),
+    );
+  }
+
+  @Method
+  appendSetCookie(ctx: Context<unknown, ResponseHeadersMeta>, value: string) {
+    const current = ctx.meta.$responseHeaders?.['Set-Cookie'];
+    const next = current ? [current].flat().concat(value) : value;
+
+    ctx.meta.$responseHeaders = {
+      ...ctx.meta.$responseHeaders,
+      'Set-Cookie': next,
+    };
   }
 
   @Method
@@ -221,9 +253,14 @@ export default class ApiService extends moleculer.Service {
       return;
     }
 
-    if (!ctx.meta.session) {
-      throw new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN, null);
+    if (restrictionType === RestrictionType.SESSION) {
+      if (!ctx.meta.session) {
+        throw new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN, null);
+      }
+      return;
     }
+
+    throw new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN, null);
   }
 
   @Method
