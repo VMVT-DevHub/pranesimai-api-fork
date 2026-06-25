@@ -172,6 +172,7 @@ export default class SessionsService extends moleculer.Service {
     }
   }
 
+  // DEPRECATED, ONLY FOR LOCAL VIISP FLOW, WILL BE REMOVED IN THE FUTURE (2050)
   @Action({
     rest: 'POST /evartai',
     params: {
@@ -180,6 +181,10 @@ export default class SessionsService extends moleculer.Service {
     },
   })
   async evartai(ctx: Context<{ ticket: string; customData: string }, ResponseHeadersMeta>) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new moleculer.Errors.MoleculerClientError('Not available', 404, 'NOT_FOUND');
+    }
+
     const { ticket, customData } = ctx.params;
     const data = customData ? JSON.parse(customData) : {};
     const { survey }: { survey?: Survey['id'] } = data;
