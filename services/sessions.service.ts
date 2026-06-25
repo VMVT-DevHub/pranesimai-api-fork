@@ -188,7 +188,8 @@ export default class SessionsService extends moleculer.Service {
       id?: string;
       email: string;
       phone?: string;
-      phoneNumber?: string;
+      firstName?: string;
+      lastName?: string;
     } = await ctx.call('http.get', {
       url: `${process.env.VIISP_HOST}/data?ticket=${ticket}`,
       opt: {
@@ -196,8 +197,7 @@ export default class SessionsService extends moleculer.Service {
       },
     });
 
-    const { id: userId, email } = viispData;
-    const phone = viispData.phone || viispData.phoneNumber;
+    const { id: userId, email, phone, firstName, lastName } = viispData;
 
     if (!userId) {
       throw new moleculer.Errors.MoleculerClientError(
@@ -211,9 +211,11 @@ export default class SessionsService extends moleculer.Service {
       userId,
       email,
       phone,
+      firstName,
+      lastName,
     };
 
-    const { token }: AuthUser & { token: string } = await ctx.call('auth.createUserToken', user);
+    const { token }: { token: string } = await ctx.call('auth.createUserToken', user);
     const setUserCookie = cookie.serialize(USER_TOKEN_COOKIE, token, {
       path: '/',
       httpOnly: true,

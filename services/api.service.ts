@@ -6,12 +6,11 @@ import { EndpointType, ResponseHeadersMeta, SESSION_MAX_AGE_SECONDS } from '../t
 import { SESSION_TOKEN_COOKIE, USER_TOKEN_COOKIE } from '../types/auth';
 import { ServerResponse } from 'http';
 import { Session } from './sessions.service';
-import type { AuthToken } from './auth.service';
+import type { AuthUser } from './auth.service';
 
 export interface MetaSession {
   session?: Session;
-  user?: Pick<AuthToken, 'userId' | 'email' | 'phone'>;
-  userToken?: AuthToken;
+  user?: AuthUser;
   isExternalRequest?: boolean; // as opposed to internal VMVT network
 }
 
@@ -161,21 +160,16 @@ export default class ApiService extends moleculer.Service {
       return;
     }
 
-    const authToken: AuthToken = await ctx.call('auth.resolveToken', {
+    const authUser: AuthUser = await ctx.call('auth.resolveToken', {
       token,
     });
 
-    if (!authToken) {
+    if (!authUser) {
       this.clearCookie(ctx, USER_TOKEN_COOKIE);
       return;
     }
 
-    ctx.meta.userToken = authToken;
-    ctx.meta.user = {
-      userId: authToken.userId,
-      email: authToken.email,
-      phone: authToken.phone,
-    };
+    ctx.meta.user = authUser;
   }
 
   @Method

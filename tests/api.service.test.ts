@@ -42,7 +42,6 @@ function getSetCookies(ctx: TestCtx): string[] {
 }
 
 const validAuthToken = {
-  id: 1,
   userId: 'user-uuid-1',
   email: 'user@example.com',
   phone: undefined as string | undefined,
@@ -75,7 +74,6 @@ describe('authenticate', () => {
       email: validAuthToken.email,
       phone: validAuthToken.phone,
     });
-    expect(ctx.meta.userToken).toEqual(validAuthToken);
     expect(result).toEqual(ctx.meta.user);
   });
 
