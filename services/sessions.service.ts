@@ -17,7 +17,7 @@ import {
   Table,
   ResponseHeadersMeta,
 } from '../types';
-import { SESSION_TOKEN_COOKIE, USER_TOKEN_COOKIE, USER_TOKEN_MAX_AGE_SECONDS } from '../types/auth';
+import { SESSION_TOKEN_COOKIE } from '../types/auth';
 import { Response, TraverseGraphResponse } from './responses.service';
 import { MetaSession, RestrictionType } from './api.service';
 import type { AuthUser } from './auth.service';
@@ -170,79 +170,6 @@ export default class SessionsService extends moleculer.Service {
         ctx.meta.user?.userId,
       );
     }
-  }
-
-  // DEPRECATED, ONLY FOR LOCAL VIISP FLOW, WILL BE REMOVED IN THE FUTURE (2050)
-  @Action({
-    rest: 'POST /evartai',
-    params: {
-      ticket: 'string',
-      customData: 'string',
-    },
-  })
-  async evartai(ctx: Context<{ ticket: string; customData: string }, ResponseHeadersMeta>) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new moleculer.Errors.MoleculerClientError('Not available', 404, 'NOT_FOUND');
-    }
-
-    const { ticket, customData } = ctx.params;
-    const data = customData ? JSON.parse(customData) : {};
-    const { survey }: { survey?: Survey['id'] } = data;
-
-    const viispData: {
-      id?: string;
-      email: string;
-      phone?: string;
-      firstName?: string;
-      lastName?: string;
-    } = await ctx.call('http.get', {
-      url: `${process.env.VIISP_HOST}/data?ticket=${ticket}`,
-      opt: {
-        responseType: 'json',
-      },
-    });
-
-    const { id: userId, email, phone, firstName, lastName } = viispData;
-
-    if (!userId) {
-      throw new moleculer.Errors.MoleculerClientError(
-        'VIISP user id is required.',
-        400,
-        'VIISP_USER_ID_REQUIRED',
-      );
-    }
-
-    const user: AuthUser = {
-      userId,
-      email,
-      phone,
-      firstName,
-      lastName,
-    };
-
-    const { token }: { token: string } = await ctx.call('auth.createUserToken', user);
-    const setUserCookie = cookie.serialize(USER_TOKEN_COOKIE, token, {
-      path: '/',
-      httpOnly: true,
-      maxAge: USER_TOKEN_MAX_AGE_SECONDS,
-    });
-    const existingSetCookie = ctx.meta.$responseHeaders?.['Set-Cookie'];
-    ctx.meta.$responseHeaders = {
-      ...ctx.meta.$responseHeaders,
-      'Set-Cookie': Array.isArray(existingSetCookie)
-        ? [...existingSetCookie, setUserCookie]
-        : existingSetCookie
-        ? [existingSetCookie, setUserCookie]
-        : setUserCookie,
-    };
-
-    if (survey) {
-      await this.startSurvey(ctx, survey, true, email, phone, userId);
-      return;
-    }
-
-    ctx.meta.$statusCode = 302;
-    ctx.meta.$location = process.env.FRONTEND_URL;
   }
 
   @Action({
