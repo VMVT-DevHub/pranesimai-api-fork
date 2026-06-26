@@ -175,6 +175,7 @@ export default class ReportsService extends moleculer.Service {
       statusMessage: report.statusMessage,
       createdAt: report.createdAt,
       updatedAt: report.updatedAt,
+      auth: report.auth,
     }));
 
     return {
