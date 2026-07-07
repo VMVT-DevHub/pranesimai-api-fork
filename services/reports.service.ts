@@ -150,17 +150,17 @@ export default class ReportsService extends moleculer.Service {
         })
       : [];
 
-    const drafts = sessions
-      .filter((session) => !session.finishedAt && !session.canceledAt)
-      .map((session) => ({
-        type: 'draft',
-        id: session.id,
-        status: 'DRAFT',
-        survey: session.survey,
-        lastResponse: session.lastResponse,
-        createdAt: session.createdAt,
-        updatedAt: session.updatedAt,
-      }));
+    // const drafts = sessions
+    //   .filter((session) => !session.finishedAt && !session.canceledAt)
+    //   .map((session) => ({
+    //     type: 'draft',
+    //     id: session.id,
+    //     status: 'DRAFT',
+    //     survey: session.survey,
+    //     lastResponse: session.lastResponse,
+    //     createdAt: session.createdAt,
+    //     updatedAt: session.updatedAt,
+    //   }));
 
     const reportItems = reports.map((report) => ({
       type: 'report',
@@ -179,7 +179,7 @@ export default class ReportsService extends moleculer.Service {
     }));
 
     return {
-      items: [...drafts, ...reportItems].sort(
+      items: [...reportItems].sort(
         (a, b) =>
           new Date(b.updatedAt || b.createdAt || 0).getTime() -
           new Date(a.updatedAt || a.createdAt || 0).getTime(),
