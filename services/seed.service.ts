@@ -166,33 +166,6 @@ const helperVeiklos = (id: number | string, idOut: number | string, qa: Question
     ...qa,
   }),
 ];
-const Identifikacija = (id: number, idOut: number | string) => [
-  q.checkbox(
-    id,
-    id + 1,
-    'Atliktas papildomas tapatybės patvirtinimas. Tapatybė patvirtinta pagal pateiktą asmens tapatybės dokumentą. Dokumento kopija nesaugoma',
-    {
-      riskEvaluation: false,
-      spField: 'tapatybe',
-      required: false,
-      anonOnly: true,
-    },
-  ),
-  q.select(id + 1, idOut, 'Tapatybę identifikavęs darbuotojas', {
-    riskEvaluation: false,
-    spField: 'darbuot',
-    options: o([
-      '-',
-      'Zigmantė Geštautienė',
-      'Vitalija Valiūnienė',
-      'Neringa Price',
-      'Nomeda Kregždienė',
-      'Giedrė Stasiulienė',
-    ]),
-    required: false,
-    anonOnly: true,
-  }),
-];
 
 const pages = {
   kontaktiniai: (
@@ -413,11 +386,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
     authType: SurveyAuthType.OPTIONAL,
     pages: [
       // =======================================
-      pages.kontaktiniai(1),
-      {
-        title: 'Identifikacija',
-        questions: [...Identifikacija(2, 4)],
-      },
+      pages.kontaktiniai(3),
 
       // =======================================
       {
@@ -1558,11 +1527,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
     pages: [
       // =======================================
 
-      pages.kontaktiniai(1),
-      {
-        title: 'Identifikacija',
-        questions: [...Identifikacija(2, 4)],
-      },
+      pages.kontaktiniai(3),
 
       // =======================================
       {
@@ -2464,13 +2429,13 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.text(
             23,
             24,
-            'Jei galite nurodykyte fizinius ar juridinius asmenis vykdančius prekybos veiklą',
+            'Jei galite nurodykite fizinius ar juridinius asmenis vykdančius prekybos veiklą',
             {
               required: true,
               spField: 'pap_adr_info',
               dynamicFields: [
                 ...dm(4, [1], {
-                  title: 'Jei galite nurodykyte fizinius ar juridinius asmenis vykdančius veiklą',
+                  title: 'Jei galite nurodykite fizinius ar juridinius asmenis vykdančius veiklą',
                 }),
               ],
             },
