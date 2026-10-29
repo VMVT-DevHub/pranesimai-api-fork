@@ -138,10 +138,12 @@ export default class SessionsService extends moleculer.Service {
       throwIfNotExist: true,
     });
 
+    const isLoggedIn = !!ctx.meta.user;
+
     const shouldRequireAuth =
       survey.authType === SurveyAuthType.REQUIRED ||
       (survey.authType === SurveyAuthType.OPTIONAL &&
-        !!(ctx.params.auth || ctx.meta.isExternalRequest));
+        !!(ctx.params.auth || ctx.meta.isExternalRequest || isLoggedIn));
 
     if (shouldRequireAuth && !ctx.meta.user) {
       const response: {

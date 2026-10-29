@@ -1320,9 +1320,9 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             spField: 'prekyb_vieta',
             options: [
               os('Fizinėje prekybos vietoje', 42),
-              os('Internetu', 47),
-              os('Organizuotame renginyje', 84),
-              os('Socialiniais tinklais', 47),
+              os('Internetu', 87),
+              os('Organizuotame renginyje', 89),
+              os('Socialiniais tinklais', 88),
             ],
             dynamicFields: [
               ...dm(4, [4], {
@@ -1364,6 +1364,38 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           // ----
+          q.address(87, 47, 'Nurodykite veiklos vietos adresą', {
+            riskEvaluation: false,
+            required: true,
+            spField: 'adresas',
+            condition: [
+              {
+                question: 41,
+                valueIndex: 1,
+              },
+            ],
+            dynamicFields: [
+              ...dm(4, [4], {
+                condition: false,
+              }),
+            ],
+          }),
+          q.text(88, 47, 'Nurodykite veiklos vykdymo adresą', {
+            riskEvaluation: false,
+            required: true,
+            spField: 'adresas_text',
+            condition: [
+              {
+                question: 41,
+                valueIndex: 3,
+              },
+            ],
+            dynamicFields: [
+              ...dm(4, [4], {
+                condition: false,
+              }),
+            ],
+          }),
           q.input(47, 48, 'Pateikite prekybos internetinio puslapio nuorodą', {
             riskEvaluation: false,
             required: true,
@@ -1381,6 +1413,22 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             ],
           }),
           // -----
+          q.text(89, 84, 'Nurodykite organizuoto renginio adresą', {
+            riskEvaluation: false,
+            spField: 'adresas_text',
+            required: true,
+            condition: [
+              {
+                question: 41,
+                valueIndex: 2,
+              },
+            ],
+            dynamicFields: [
+              ...dm(4, [0, 2, 3, 4], {
+                condition: false,
+              }),
+            ],
+          }),
           q.input(84, 51, 'Nurodykite organizuoto renginio pavadinimą', {
             riskEvaluation: false,
             spField: 'org_pav',
@@ -1968,8 +2016,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.radio(12, undefined, 'Nurodykite kur pastebėjote pranešamus pažeidimus', {
             options: [
               os('Fizinė gyvūnų laikymo vieta', 13),
-              os('Internetinė erdvė', 16),
-              os('Socialiniai tinklai', 34),
+              os('Internetinė erdvė', 35),
+              os('Socialiniai tinklai', 36),
             ],
             required: true,
             spField: 'prekyb_vieta',
@@ -2009,6 +2057,28 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               {
                 question: 13,
                 valueIndex: 1,
+              },
+            ],
+          }),
+          // -----
+          q.address(35, 16, 'Nurodykite tikslų gyvūnų laikymo vietos adresą', {
+            required: true,
+            spField: 'adresas',
+            condition: [
+              {
+                question: 12,
+                valueIndex: 1,
+              },
+            ],
+          }),
+          q.text(36, 34, 'Nurodykite veiklos vykdymo adresą', {
+            riskEvaluation: false,
+            required: true,
+            spField: 'adresas_text',
+            condition: [
+              {
+                question: 12,
+                valueIndex: 2,
               },
             ],
           }),
@@ -2366,8 +2436,8 @@ const SURVEYS_SEED: SurveyTemplate[] = [
           q.radio(18, undefined, 'Nurodykite produkto prekybos vietą', {
             options: [
               os('Fizinė parduotuvė', 19),
-              os('Internetinė parduotuvė', 20),
-              os('Socialiniai tinklai', 21),
+              os('Internetinė parduotuvė', 33),
+              os('Socialiniai tinklai', 34),
             ],
             required: false,
             spField: 'prekyb_vieta',
@@ -2375,6 +2445,32 @@ const SURVEYS_SEED: SurveyTemplate[] = [
               ...dm(4, [1], {
                 title: 'Nurodykite apie kokio tipo veiklą pranešate',
               }),
+            ],
+          }),
+          q.address(33, 20, 'Nurodykite prekybos vietos adresą', {
+            required: true,
+            spField: 'adresas',
+            dynamicFields: [
+              ...dm(4, [1], {
+                title: 'Nurodykite veiklos vietos adresą',
+              }),
+            ],
+            condition: [
+              {
+                question: 18,
+                valueIndex: 0,
+              },
+            ],
+          }),
+          q.text(34, 21, 'Nurodykite veiklos vykdymo adresą', {
+            riskEvaluation: false,
+            required: true,
+            spField: 'adresas_text',
+            condition: [
+              {
+                question: 18,
+                valueIndex: 2,
+              },
             ],
           }),
           q.address(19, 22, 'Nurodykite prekybos vietos adresą', {
@@ -2388,7 +2484,7 @@ const SURVEYS_SEED: SurveyTemplate[] = [
             condition: [
               {
                 question: 18,
-                valueIndex: 0,
+                valueIndex: 1,
               },
             ],
           }),
